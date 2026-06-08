@@ -1,0 +1,537 @@
+Create a **modern, professional, responsive church website** for:
+
+Arabic Name (Default): **كنيسة الإيمان**
+English Name: **Faith Church**
+
+The website must support **Arabic (RTL) as the default language** and **English as a secondary language**, with a **language switcher in the header**.
+
+The design should be **inspired by the structure and clarity of modern church websites like thesummitchurch.com**, but it must be **original in layout, styling, wording, and branding**.
+
+The goal is to build a **complete digital church platform**, not just a static site.
+
+The site must be **responsive, interactive, organized, and capable of automatically importing content from Word and Excel documents**.
+
+---
+
+# BRANDING
+
+Use the uploaded **Faith Church logo** as the core identity.
+
+Logo elements represent:
+
+Blue → faith, stability, trust
+Orange → hope, welcome, energy
+Green → growth, life, community
+
+Design guidelines:
+
+Primary color: Blue
+Accent color: Orange
+Secondary accent: Green
+Background: White or very light grey
+Text: Dark gray / navy
+
+Design style:
+
+Modern
+Minimal
+Warm
+Clean
+Spiritual but not overly decorative
+
+Use:
+
+• large spacing
+• rounded cards
+• subtle shadows
+• modern typography
+• soft section transitions
+
+The cross from the logo represents the spiritual center of the church.
+
+---
+
+# LANGUAGE SYSTEM
+
+Default language: **Arabic (RTL)**
+
+Secondary language: **English**
+
+The site must support:
+
+RTL layout switching
+Language toggle button in navbar
+Automatic direction switching
+Separate translations for pages
+
+Example:
+
+كنيسة الإيمان
+Faith Church
+
+---
+
+# GLOBAL NAVIGATION
+
+Main navigation menu:
+
+الرئيسية / Home
+عن الكنيسة / About
+زيارتك الأولى / First Visit
+الخطوات القادمة / Next Steps
+العظات / Sermons
+الفعاليات / Events
+الأطفال / Kids
+الشباب / Students
+البالغين / Adults
+العطاء / Give
+تواصل معنا / Contact
+الموارد / Resources
+
+---
+
+# FULL SITEMAP
+
+Home
+
+About
+• Who We Are
+• What We Believe
+• Mission & Vision
+• Church History
+• Leadership
+
+First Visit
+• What to Expect
+• Service Times
+• Location
+• Parking
+• Kids Check-in
+• FAQ
+
+Next Steps
+• Worship
+• Groups
+• Serve
+• Baptism
+• Membership
+• Discipleship
+
+Sermons
+• Latest Sermon
+• Sermon Archive
+• Series
+• Speakers
+
+Events
+• Upcoming Events
+• Calendar View
+• Event Details
+
+Kids Ministry
+• Overview
+• Age Groups
+• Safety
+• Activities
+• Parent Resources
+
+Students Ministry
+• Youth Groups
+• Activities
+• Events
+
+Adults Ministry
+• Bible Studies
+• Men's Ministry
+• Women's Ministry
+• Community Groups
+
+Give
+• Online Giving
+• Tithes
+• Missions
+
+Resources
+• Documents
+• Church Announcements
+• Policies
+
+Contact
+• Address
+• Map
+• Contact Form
+• Prayer Request
+
+---
+
+# HOMEPAGE STRUCTURE
+
+Hero Section
+
+Large welcoming headline
+
+Example Arabic headline:
+
+مرحبا بكم في كنيسة الإيمان
+مكان للنمو في الإيمان والمجتمع
+
+Buttons:
+
+خطط لزيارتك
+شاهد العظة الأخيرة
+
+Include:
+
+Service time display
+Background image or gradient
+Church welcoming message
+
+---
+
+Welcome Section
+
+Short introduction explaining that everyone is welcome.
+
+---
+
+Why Visit Section
+
+Cards:
+
+Worship
+Biblical Teaching
+Community
+Kids Ministry
+
+---
+
+Next Steps Section
+
+Cards:
+
+العبادة
+المجموعات
+الخدمة
+التلمذة
+
+---
+
+Ministries Section
+
+Cards:
+
+Kids
+Students
+Adults
+
+---
+
+Latest Sermon Section
+
+Video player preview
+
+---
+
+Upcoming Events
+
+Event cards
+
+---
+
+Location Section
+
+Map
+Service times
+Contact button
+
+---
+
+Footer
+
+Quick links
+Contact info
+Social media
+Copyright
+
+---
+
+# PAGE-BY-PAGE STRUCTURE
+
+ABOUT PAGE
+
+Sections:
+
+Who We Are
+Mission
+Vision
+Beliefs
+Leadership Profiles
+Church History
+
+---
+
+FIRST VISIT PAGE
+
+Explain:
+
+What Sunday service looks like
+What to wear
+Where to park
+Kids ministry safety
+Service length
+Friendly introduction
+
+---
+
+SERMONS PAGE
+
+Features:
+
+Video sermon player
+Sermon archive
+Search sermons
+Filter by:
+
+Series
+Speaker
+Date
+Topic
+
+---
+
+EVENTS PAGE
+
+Display:
+
+Upcoming events
+Calendar view
+Event detail pages
+
+Each event includes:
+
+Title
+Date
+Location
+Description
+Register button
+
+---
+
+MINISTRIES PAGES
+
+Kids
+
+Children's programs
+Age groups
+Safety information
+
+Students
+
+Youth gatherings
+Activities
+Mentorship
+
+Adults
+
+Bible studies
+Community groups
+Men's ministry
+Women's ministry
+
+---
+
+GIVE PAGE
+
+Explain giving with a respectful tone.
+
+Include:
+
+Online giving form
+Secure payment integration
+Mission explanation
+
+---
+
+CONTACT PAGE
+
+Include:
+
+Google map
+Address
+Phone
+Email
+Office hours
+Contact form
+Prayer request form
+
+---
+
+# DOCUMENT IMPORT SYSTEM
+
+The website must include a **smart document reader**.
+
+Church staff will upload:
+
+Word files (.docx)
+Excel files (.xlsx)
+
+The system should:
+
+Read files
+Extract text and tables
+Suggest page placement
+
+Examples:
+
+Word files → announcements, ministry descriptions, sermons, policies
+
+Excel files → events lists, schedules, directories
+
+Workflow:
+
+Upload document
+AI reads structure
+Preview content
+Select page placement
+Publish
+
+---
+
+DOCX PROCESSING
+
+Detect:
+
+Headings
+Paragraphs
+Lists
+
+Convert into:
+
+Formatted webpage sections.
+
+---
+
+XLSX PROCESSING
+
+Read:
+
+Rows
+Columns
+Sheet names
+
+Convert tables into:
+
+Event calendars
+Schedules
+Directories
+
+---
+
+# ADMIN CMS
+
+Build an admin dashboard where staff can:
+
+Upload documents
+Edit pages
+Add sermons
+Create events
+Manage ministries
+Update service times
+Manage contact details
+Publish or save drafts
+
+---
+
+# RESPONSIVE DESIGN
+
+Must work perfectly on:
+
+Desktop
+Tablet
+Mobile
+
+Features:
+
+Sticky header
+Mobile navigation menu
+Large touch buttons
+Optimized images
+Fast loading
+
+---
+
+# ANIMATIONS
+
+Use subtle animations:
+
+Scroll fade-in
+Hover card lift
+Smooth page transitions
+Soft parallax
+
+Avoid heavy animations.
+
+---
+
+# ACCESSIBILITY
+
+Include:
+
+Proper contrast
+Alt text for images
+Keyboard navigation
+Screen reader support
+
+---
+
+# SEO
+
+Implement:
+
+Meta titles
+Meta descriptions
+Clean URLs
+Structured headings
+
+Example:
+
+/sermons
+/events
+/about
+
+---
+
+# PERFORMANCE
+
+Optimize:
+
+Image loading
+Lazy loading
+Efficient components
+
+Site should load quickly even on mobile networks.
+
+---
+
+# FINAL GOAL
+
+Create a **professional digital church platform** for:
+
+كنيسة الإيمان
+Faith Church
+
+The website should feel:
+
+Welcoming
+Modern
+Trustworthy
+Family friendly
+Spiritually inspiring
+
+It should help visitors easily:
+
+Plan a visit
+Watch sermons
+Join ministries
+Read church documents
+Connect with the church community.

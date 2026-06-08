@@ -1,0 +1,38 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "VEpC0wyYDg_KKf399elHM"
+uri = "file://artifacts/faith-church/src/assets/hero.jpg"
+type = "image"
+title = "vibrant church worship service"
+
+[[outputs]]
+id = "LVjRshBxbBZiGz0hI1vxv"
+uri = "file://artifacts/faith-church/src/assets/kids.jpg"
+type = "image"
+title = "happy children in sunday school"
+
+[[outputs]]
+id = "6L5Tppnt5V0b3bbYeer8A"
+uri = "file://artifacts/faith-church/src/assets/students.jpg"
+type = "image"
+title = "young adults university students laughing together"
+
+[[outputs]]
+id = "Xbs3chkgtQVKrJiQkysu6"
+uri = "file://artifacts/faith-church/src/assets/adults.jpg"
+type = "image"
+title = "adults small group bible study"
+
+[[outputs]]
+id = "WaylM7v2twOCLtkk44idW"
+uri = "file://artifacts/faith-church/src/assets/worship.jpg"
+type = "image"
+title = "people worshipping in church"
+
+[[outputs]]
+id = "ey8-spoN3ji8KvxPFx6Ez"
+uri = "file://artifacts/faith-church/src/assets/community.jpg"
+type = "image"
+title = "church community gathering"
