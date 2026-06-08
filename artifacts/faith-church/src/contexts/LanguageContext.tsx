@@ -10,14 +10,30 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+function safeGetStorage(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSetStorage(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // storage not available (sandboxed iframe, private mode, etc.)
+  }
+}
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem("language") as Language;
+    const saved = safeGetStorage("language") as Language;
     return saved || "ar";
   });
 
   useEffect(() => {
-    localStorage.setItem("language", language);
+    safeSetStorage("language", language);
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = language;
   }, [language]);
