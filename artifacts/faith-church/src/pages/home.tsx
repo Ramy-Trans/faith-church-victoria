@@ -235,10 +235,10 @@ export default function Home() {
                 {t("أهلاً بك في بيتك", "Welcome Home")}
               </h2>
             </motion.div>
-            <motion.p variants={itemFade} className="text-lg text-muted-foreground leading-relaxed">
+            <motion.p variants={itemFade} className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
               {t(
-                "مهما كانت خلفيتك أو قصتك، هناك مكان لك هنا في كنيسة الإيمان. نحن مجتمع من المؤمنين نسعى لمعرفة الله بعمق ومحبة بعضنا البعض بصدق.",
-                "No matter your background or story, there is a place for you here at Faith Church. We are a community of believers seeking to know God deeply and love one another authentically."
+                "مهما كانت خلفيتك أو قصتك، لك مكان هنا في كنيسة الإيمان.\nرسالتنا هي عبادة الرب وخدمة شعبه بالمنطقة المحيطة والمناطق المختلفة؛ وذلك لربحهم للمسيح وتنميتهم التنمية المتكاملة وتسديد احتياجاتهم الروحية والنفسية والجسدية\nمن خلال المجموعات الصغيرة والإجتماعات العامة.\nشعارنا: نَنْمُو فِي كُلِّ شَيْءٍ (أف 4: 15)",
+                "No matter your background or story, there is a place for you here at Faith Church.\nOur mission is to worship the Lord and serve His people in the surrounding and various areas; winning them to Christ, developing them holistically, and meeting their spiritual, psychological, and physical needs\nthrough small groups and public gatherings.\nOur motto: We Grow in All Things (Eph 4:15)"
               )}
             </motion.p>
             <motion.div variants={itemFade}>
