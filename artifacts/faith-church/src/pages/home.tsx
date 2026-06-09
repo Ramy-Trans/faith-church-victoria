@@ -166,13 +166,6 @@ export default function Home() {
               )}
             </motion.p>
 
-            <motion.p variants={itemFade} className="text-base text-slate-300">
-              {t(
-                "الجمعة ٤ مساءً — الأحد ٧ مساءً",
-                "Friday 4PM — Sunday 7PM"
-              )}
-            </motion.p>
-
             <motion.div
               variants={itemFade}
               className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2"
