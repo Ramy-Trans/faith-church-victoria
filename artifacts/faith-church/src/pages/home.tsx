@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Music, BookOpen, Users, Baby, PlayCircle, MapPin, CalendarDays, ArrowRight, Youtube, Loader2 } from "lucide-react";
+import { UserPlus, BookMarked, Heart, Flame, BookOpen, Users, PlayCircle, MapPin, ArrowRight, Youtube, Loader2 } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 
 interface LatestSermon {
@@ -261,28 +261,30 @@ export default function Home() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
           >
             <FeatureCard
-              icon={<Music className="h-8 w-8 text-primary" />}
+              icon={<UserPlus className="h-8 w-8 text-primary" />}
               iconBg="bg-primary/10"
-              title={t("العبادة", "Worship")}
-              description={t("أوقات عبادة حية ومملوءة بالروح القدس", "Spirit-filled worship services every week")}
+              title={t("انضم لمجموعة", "Join a Group")}
+              description={t("علاقات حقيقية ومجموعات صغيرة متنوعة", "Real relationships and small groups")}
+              href="/contact#contact-form"
             />
             <FeatureCard
-              icon={<BookOpen className="h-8 w-8 text-secondary" />}
+              icon={<BookMarked className="h-8 w-8 text-secondary" />}
               iconBg="bg-secondary/10"
-              title={t("التعليم الكتابي", "Biblical Teaching")}
+              title={t("ادرس الكلمة", "Study the Word")}
               description={t("تعليم كتابي عميق وعملي في الحياة اليومية", "Deep, practical Bible teaching for daily life")}
             />
             <FeatureCard
-              icon={<Users className="h-8 w-8 text-accent" />}
+              icon={<Heart className="h-8 w-8 text-accent" />}
               iconBg="bg-accent/10"
-              title={t("المجتمع", "Community")}
-              description={t("علاقات حقيقية ومجموعات صغيرة متنوعة", "Real relationships and small groups")}
+              title={t("B.L.E.S.S.", "B.L.E.S.S.")}
+              description={t("صلي، اسمع، كل، اخدم، شارك", "Pray, Listen, Eat, Serve, Share")}
             />
             <FeatureCard
-              icon={<Baby className="h-8 w-8 text-primary" />}
+              icon={<Flame className="h-8 w-8 text-primary" />}
               iconBg="bg-primary/10"
-              title={t("خدمة الأطفال", "Kids Ministry")}
-              description={t("برامج آمنة وممتعة لجميع الأعمار (٤-١٢)", "Safe, fun programs for ages 4–12")}
+              title={t("طلبة صلاة", "Prayer Disciples")}
+              description={t("الصلاة المقتدرة في فعلها", "The Power of Effective Prayer")}
+              href="/contact#prayer-form"
             />
           </motion.div>
         </div>
@@ -573,27 +575,30 @@ export default function Home() {
   );
 }
 
-function FeatureCard({ icon, iconBg, title, description }: { icon: React.ReactNode; iconBg: string; title: string; description: string }) {
+function FeatureCard({ icon, iconBg, title, description, href }: { icon: React.ReactNode; iconBg: string; title: string; description: string; href?: string }) {
+  const inner = (
+    <motion.div
+      whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <Card className={`border border-border/60 hover:border-primary/30 transition-colors h-full${href ? " cursor-pointer" : ""}`}>
+        <CardContent className="pt-8 pb-6 px-6 text-center space-y-4">
+          <motion.div
+            className={`mx-auto w-16 h-16 ${iconBg} rounded-2xl flex items-center justify-center`}
+            whileHover={{ rotate: [0, -8, 8, 0], scale: 1.1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {icon}
+          </motion.div>
+          <h3 className="text-xl font-bold text-foreground">{title}</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
   return (
     <motion.div variants={itemFade}>
-      <motion.div
-        whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      >
-        <Card className="border border-border/60 hover:border-primary/30 transition-colors h-full">
-          <CardContent className="pt-8 pb-6 px-6 text-center space-y-4">
-            <motion.div
-              className={`mx-auto w-16 h-16 ${iconBg} rounded-2xl flex items-center justify-center`}
-              whileHover={{ rotate: [0, -8, 8, 0], scale: 1.1 }}
-              transition={{ duration: 0.4 }}
-            >
-              {icon}
-            </motion.div>
-            <h3 className="text-xl font-bold text-foreground">{title}</h3>
-            <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
-          </CardContent>
-        </Card>
-      </motion.div>
+      {href ? <Link href={href}>{inner}</Link> : inner}
     </motion.div>
   );
 }

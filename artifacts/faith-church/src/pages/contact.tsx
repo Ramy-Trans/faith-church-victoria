@@ -101,6 +101,7 @@ export default function Contact() {
 
             {/* Forms */}
             <div className="lg:col-span-2 space-y-8">
+              <div id="contact-form">
               <Card className="border-0 shadow-md">
                 <CardHeader>
                   <CardTitle>{t("أرسل لنا رسالة", "Send us a message")}</CardTitle>
@@ -129,7 +130,9 @@ export default function Contact() {
                   </form>
                 </CardContent>
               </Card>
+              </div>
 
+              <div id="prayer-form">
               <Card className="border-0 shadow-md bg-slate-50">
                 <CardHeader>
                   <CardTitle className="text-primary">{t("طلبات الصلاة", "Prayer Requests")}</CardTitle>
@@ -148,6 +151,7 @@ export default function Contact() {
                   </form>
                 </CardContent>
               </Card>
+              </div>
             </div>
 
           </div>
