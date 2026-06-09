@@ -209,7 +209,7 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-2 gap-8 max-w-sm mx-auto"
+            className="flex justify-center gap-20"
           >
             <StatItem value={56} suffix="+" label={t("سنة من الخدمة", "Years of Ministry")} />
             <StatItem value={100} suffix="+" label={t("مجموعة صغيرة", "Small Groups")} />
