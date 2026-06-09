@@ -209,10 +209,12 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            className="flex justify-between items-center"
+            className="grid grid-cols-4 w-full"
           >
-            <StatItem value={56} suffix="+" label={t("سنة من الخدمة", "Years of Ministry")} />
+            <div />
             <StatItem value={100} suffix="+" label={t("مجموعة صغيرة", "Small Groups")} />
+            <StatItem value={56} suffix="+" label={t("سنة من الخدمة", "Years of Ministry")} />
+            <div />
           </motion.div>
         </div>
       </section>
