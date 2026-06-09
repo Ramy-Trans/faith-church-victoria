@@ -161,7 +161,7 @@ export default function Home() {
 
             <motion.p variants={itemFade} className="text-lg md:text-xl text-slate-200 font-medium">
               {t(
-                "مكان للنمو في الإيمان والمجتمع والخدمة",
+                "أكون مثله، وأعمل لأجله",
                 "A Place to Grow in Faith, Community & Service"
               )}
             </motion.p>
