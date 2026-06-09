@@ -580,6 +580,7 @@ function FeatureCard({ icon, iconBg, title, description, href }: { icon: React.R
     <motion.div
       whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="h-full"
     >
       <Card className={`border border-border/60 hover:border-primary/30 transition-colors h-full${href ? " cursor-pointer" : ""}`}>
         <CardContent className="pt-8 pb-6 px-6 text-center space-y-4">
@@ -597,8 +598,8 @@ function FeatureCard({ icon, iconBg, title, description, href }: { icon: React.R
     </motion.div>
   );
   return (
-    <motion.div variants={itemFade}>
-      {href ? <Link href={href}>{inner}</Link> : inner}
+    <motion.div variants={itemFade} className="h-full">
+      {href ? <Link href={href} className="block h-full">{inner}</Link> : inner}
     </motion.div>
   );
 }
