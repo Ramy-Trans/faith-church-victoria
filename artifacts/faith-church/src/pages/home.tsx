@@ -145,16 +145,16 @@ export default function Home() {
 
             <motion.h1
               variants={itemFade}
-              className="text-4xl md:text-5xl lg:text-7xl font-bold text-white tracking-tight leading-tight"
+              className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-tight"
             >
               {t(
                 <>
-                  مرحبًا بكم في{" "}
-                  <span className="text-accent">كنيسة الإيمان فيكتوريا</span>
+                  <span className="block text-white">مرحبًا بكم في</span>
+                  <span className="block text-accent">كنيسة الإيمان فيكتوريا</span>
                 </>,
                 <>
-                  Welcome to{" "}
-                  <span className="text-accent">Faith Church Victoria</span>
+                  <span className="block text-white">Welcome to</span>
+                  <span className="block text-accent">Faith Church Victoria</span>
                 </>
               )}
             </motion.h1>
@@ -209,12 +209,10 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+            className="grid grid-cols-2 gap-8 max-w-sm mx-auto"
           >
-            <StatItem value={120} suffix="+" label={t("سنة من الخدمة", "Years of Ministry")} />
-            <StatItem value={20} suffix="+" label={t("مجموعة صغيرة", "Small Groups")} />
-            <StatItem value={3} suffix="" label={t("اجتماعات أسبوعية", "Weekly Services")} />
-            <StatItem value={85} suffix="" label={t("فدان في جبل الصلاة", "Feddan at Prayer Mountain")} />
+            <StatItem value={56} suffix="+" label={t("سنة من الخدمة", "Years of Ministry")} />
+            <StatItem value={100} suffix="+" label={t("مجموعة صغيرة", "Small Groups")} />
           </motion.div>
         </div>
       </section>
