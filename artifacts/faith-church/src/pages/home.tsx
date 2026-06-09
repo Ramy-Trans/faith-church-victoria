@@ -65,6 +65,9 @@ function StatItem({ value, suffix, label }: { value: number; suffix: string; lab
   return (
     <motion.div
       ref={ref}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-60px" }}
       variants={itemFade}
       className="text-center space-y-2"
     >
@@ -204,18 +207,12 @@ export default function Home() {
       {/* Stats Strip */}
       <section className="bg-primary py-14">
         <div className="container px-4">
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-4 w-full"
-          >
+          <div className="grid grid-cols-4 w-full">
             <div />
             <StatItem value={100} suffix="+" label={t("مجموعة صغيرة", "Small Groups")} />
             <StatItem value={56} suffix="+" label={t("سنة من الخدمة", "Years of Ministry")} />
             <div />
-          </motion.div>
+          </div>
         </div>
       </section>
 
