@@ -5,18 +5,9 @@ import { PlayCircle, Search, ExternalLink, Youtube, Loader2, RefreshCw, Radio, C
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { getYouTubeVideos, type YTVideo } from "@/lib/youtube";
 
-interface YoutubeVideo {
-  id: string;
-  title: string;
-  published: string;
-  thumbnail: string;
-  description: string;
-  url: string;
-  views: string;
-  type?: "video" | "live" | "premiere";
-  liveBroadcastContent?: string;
-}
+type YoutubeVideo = YTVideo;
 
 const itemFade = {
   hidden: { opacity: 0, y: 24 },
@@ -68,11 +59,9 @@ export default function Sermons() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/youtube/videos");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setVideos(data.videos ?? []);
-      if (data.videos?.length > 0) setSelected(data.videos[0]);
+      const videos = await getYouTubeVideos();
+      setVideos(videos);
+      if (videos.length > 0) setSelected(videos[0]);
     } catch {
       setError(t("حدث خطأ أثناء تحميل الفيديوهات", "Failed to load videos"));
     } finally {
