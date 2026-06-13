@@ -1,9 +1,8 @@
 const CHANNEL_ID = "UCYdsXaXzdLvgnJL9gsBxY5g";
-const CHANNEL_HANDLE = "Faithchegypt";
 const SESSION_KEY = "fc_yt_cache_v2";
-const SESSION_TTL = 15 * 60 * 1000; // 15 min
+const SESSION_TTL = 15 * 60 * 1000;
 const LIVE_KEY = "fc_live_cache_v1";
-const LIVE_TTL = 2 * 60 * 1000; // 2 min
+const LIVE_TTL = 90 * 1000; // match server cache
 
 export interface YTVideo {
   id: string;
@@ -117,130 +116,26 @@ export async function getYouTubeVideos(): Promise<YTVideo[]> {
 }
 
 // ─── Live stream detection ─────────────────────────────────────────────────────
-//
-// Strategy: fetch the channel's /live page through CORS proxies.
-// YouTube redirects this to the actual watch page when a stream is live.
-// We then do SIMPLE STRING SEARCH on the raw HTML — no JSON.parse needed.
-// This avoids the "lazy regex stops at first }" bug.
-
-function decodeUnicode(s: string): string {
-  return s.replace(/\\u[\dA-Fa-f]{4}/g, m => String.fromCharCode(parseInt(m.slice(2), 16)));
-}
-
-function extractTitle(html: string): string {
-  // og:title is the most reliable
-  const og = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/);
-  if (og) return decodeUnicode(og[1]);
-  const og2 = html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:title"/);
-  if (og2) return decodeUnicode(og2[1]);
-  // name=title fallback
-  const nt = html.match(/<meta[^>]+name="title"[^>]+content="([^"]+)"/);
-  if (nt) return decodeUnicode(nt[1]);
-  return "";
-}
-
-async function fetchLivePage(): Promise<LiveStreamInfo | null> {
-  // Two YouTube URL formats that both redirect to the current live stream
-  const liveUrls = [
-    `https://www.youtube.com/@${CHANNEL_HANDLE}/live`,
-    `https://www.youtube.com/channel/${CHANNEL_ID}/live`,
-  ];
-  const makeProxies = [
-    (u: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    (u: string) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-  ];
-
-  for (const liveUrl of liveUrls) {
-    for (const makeProxy of makeProxies) {
-      try {
-        const res = await fetch(makeProxy(liveUrl), { signal: AbortSignal.timeout(10000) });
-        if (!res.ok) continue;
-        const html = await res.text();
-
-        // Simple string checks — no JSON.parse, avoids regex-nesting bugs
-        const isLive =
-          html.includes('"isLive":true') ||
-          html.includes('"isLiveNow":true') ||
-          html.includes('"isLiveContent":true');
-        const isUpcoming =
-          html.includes('"isUpcoming":true') &&
-          html.includes('"scheduledStartTime"');
-
-        if (!isLive && !isUpcoming) {
-          // This URL is not live — no need to try more proxies for it
-          break;
-        }
-
-        // Extract the first video ID in the page
-        const idMatch = html.match(/"videoId":"([A-Za-z0-9_-]{11})"/);
-        if (!idMatch) continue;
-        const videoId = idMatch[1];
-
-        const title = extractTitle(html) || (isLive ? "بث مباشر" : "عرض أول");
-
-        return {
-          id: videoId,
-          title,
-          type: isLive ? "live" : "premiere",
-          url: `https://www.youtube.com/watch?v=${videoId}`,
-          thumbnail: `https://i3.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-        };
-      } catch { continue; }
-    }
-  }
-  return null;
-}
-
-// Secondary: check Invidious API (clean JSON, no HTML scraping)
-async function checkLiveViaInvidious(): Promise<LiveStreamInfo | null> {
-  const instances = [
-    `https://inv.tux.pizza`,
-    `https://invidious.privacydev.net`,
-  ];
-  for (const base of instances) {
-    try {
-      const res = await fetch(
-        `${base}/api/v1/channels/${CHANNEL_ID}/videos?sort_by=newest&type=all`,
-        { signal: AbortSignal.timeout(7000), headers: { Accept: "application/json" } }
-      );
-      if (!res.ok) continue;
-      const data = await res.json();
-      const videos: any[] = data.videos ?? [];
-      const live = videos.find(v => v.liveNow === true || v.isUpcoming === true);
-      if (!live) return null;
-      return {
-        id: live.videoId,
-        title: live.title ?? (live.liveNow ? "بث مباشر" : "عرض أول"),
-        type: live.liveNow ? "live" : "premiere",
-        url: `https://www.youtube.com/watch?v=${live.videoId}`,
-        thumbnail: `https://i3.ytimg.com/vi/${live.videoId}/maxresdefault.jpg`,
-      };
-    } catch { continue; }
-  }
-  return null;
-}
+// Uses the server-side /api/youtube/live endpoint which fetches YouTube directly
+// (no CORS issues, no third-party proxy needed).
 
 export async function getLiveStream(): Promise<LiveStreamInfo | null> {
   const c = readCache<LiveStreamInfo | null>(LIVE_KEY, LIVE_TTL);
   if (c.found) return c.data;
 
-  // Run both methods in parallel; first non-null result wins
-  const [pageResult, invResult] = await Promise.allSettled([
-    fetchLivePage(),
-    checkLiveViaInvidious(),
-  ]);
+  try {
+    const res = await fetch("/api/youtube/live", { signal: AbortSignal.timeout(10000) });
+    if (res.ok) {
+      const data = await res.json();
+      const info: LiveStreamInfo | null = data.live
+        ? { id: data.id, title: data.title, type: data.type, url: data.url, thumbnail: data.thumbnail }
+        : null;
+      writeCache(LIVE_KEY, info);
+      return info;
+    }
+  } catch {}
 
-  const info =
-    (pageResult.status === "fulfilled" && pageResult.value) ||
-    (invResult.status === "fulfilled" && invResult.value) ||
-    null;
-
-  // Only cache if at least one method returned a definitive answer
-  const hadSuccess =
-    pageResult.status === "fulfilled" || invResult.status === "fulfilled";
-  if (hadSuccess) writeCache(LIVE_KEY, info);
-
-  return info;
+  return null;
 }
 
 export function invalidateLiveCache() {
