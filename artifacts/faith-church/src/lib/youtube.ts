@@ -1,6 +1,9 @@
 const CHANNEL_ID = "UCYdsXaXzdLvgnJL9gsBxY5g";
+const CHANNEL_HANDLE = "@Faithchegypt";
 const SESSION_KEY = "fc_yt_cache_v2";
 const SESSION_TTL = 15 * 60 * 1000; // 15 min
+const LIVE_KEY = "fc_live_cache_v1";
+const LIVE_TTL = 2 * 60 * 1000; // 2 min — always check freshly for live
 
 export interface YTVideo {
   id: string;
@@ -12,6 +15,16 @@ export interface YTVideo {
   views: string;
   type: "video" | "live" | "premiere";
 }
+
+export interface LiveStreamInfo {
+  id: string;
+  title: string;
+  type: "live" | "premiere";
+  url: string;
+  thumbnail: string;
+}
+
+// ─── RSS parser ────────────────────────────────────────────────────────────────
 
 function parseRSSXml(xml: string): YTVideo[] {
   const videos: YTVideo[] = [];
@@ -67,27 +80,31 @@ async function fetchRSS(): Promise<YTVideo[]> {
   throw new Error("All RSS proxies failed");
 }
 
-function readCache(): YTVideo[] | null {
+// ─── Session storage helpers ───────────────────────────────────────────────────
+
+function readCache<T>(key: string, ttl: number): T | null {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = sessionStorage.getItem(key);
     if (!raw) return null;
-    const { videos, at } = JSON.parse(raw) as { videos: YTVideo[]; at: number };
-    if (Date.now() - at < SESSION_TTL) return videos;
+    const { data, at } = JSON.parse(raw) as { data: T; at: number };
+    if (Date.now() - at < ttl) return data;
   } catch {}
   return null;
 }
 
-function writeCache(videos: YTVideo[]) {
+function writeCache<T>(key: string, data: T) {
   try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ videos, at: Date.now() }));
+    sessionStorage.setItem(key, JSON.stringify({ data, at: Date.now() }));
   } catch {}
 }
 
+// ─── Video list ────────────────────────────────────────────────────────────────
+
 export async function getYouTubeVideos(): Promise<YTVideo[]> {
-  const cached = readCache();
+  const cached = readCache<YTVideo[]>(SESSION_KEY, SESSION_TTL);
   if (cached) return cached;
 
-  // Try backend first (same-origin, no proxy chain for production build)
+  // Try backend first (same-origin, fast cache hit in production)
   try {
     const res = await fetch("/api/youtube/videos", { signal: AbortSignal.timeout(3000) });
     if (res.ok) {
@@ -98,14 +115,86 @@ export async function getYouTubeVideos(): Promise<YTVideo[]> {
         url: v.url, views: v.views, type: v.type ?? "video",
       }));
       if (videos.length > 0) {
-        writeCache(videos);
+        writeCache(SESSION_KEY, videos);
         return videos;
       }
     }
   } catch {}
 
-  // Fallback: fetch RSS directly via CORS proxy
   const videos = await fetchRSS();
-  writeCache(videos);
+  writeCache(SESSION_KEY, videos);
   return videos;
+}
+
+// ─── Live stream detection ─────────────────────────────────────────────────────
+// Fetches the channel's /live page via CORS proxies.
+// YouTube redirects this URL to the actual live video page when a stream is live,
+// and the raw HTML contains ytInitialPlayerResponse with isLive / isUpcoming.
+
+function decodeUnicode(s: string): string {
+  return s.replace(/\\u[\dA-Fa-f]{4}/g, m =>
+    String.fromCharCode(parseInt(m.slice(2), 16))
+  );
+}
+
+async function fetchLivePage(): Promise<LiveStreamInfo | null> {
+  const liveUrl = `https://www.youtube.com/${CHANNEL_HANDLE}/live`;
+  const proxies = [
+    `https://corsproxy.io/?url=${encodeURIComponent(liveUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(liveUrl)}`,
+  ];
+
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) continue;
+      const html = await res.text();
+
+      // Extract ytInitialPlayerResponse from inline script
+      const playerMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\})\s*;/s);
+      if (!playerMatch) continue;
+
+      let playerData: any;
+      try { playerData = JSON.parse(playerMatch[1]); } catch { continue; }
+
+      const vd = playerData?.videoDetails;
+      if (!vd?.videoId) continue;
+
+      const isLive = vd.isLive === true || vd.isLiveContent === true;
+      const isUpcoming = vd.isUpcoming === true;
+
+      if (!isLive && !isUpcoming) {
+        // Channel live URL loaded but no active/upcoming stream
+        return null;
+      }
+
+      const title = decodeUnicode(vd.title ?? "");
+      return {
+        id: vd.videoId,
+        title,
+        type: isLive ? "live" : "premiere",
+        url: `https://www.youtube.com/watch?v=${vd.videoId}`,
+        thumbnail:
+          `https://i3.ytimg.com/vi/${vd.videoId}/maxresdefault.jpg`,
+      };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+export async function getLiveStream(): Promise<LiveStreamInfo | null> {
+  // Short-lived cache — refresh every 2 min so live banners appear quickly
+  const cached = readCache<LiveStreamInfo | null>(LIVE_KEY, LIVE_TTL);
+  if (cached !== null) return cached; // note: null is a valid cached value (no stream)
+
+  const info = await fetchLivePage().catch(() => null);
+  writeCache(LIVE_KEY, info ?? null);
+  return info;
+}
+
+/** Call this to force-clear the live cache and re-check immediately */
+export function invalidateLiveCache() {
+  try { sessionStorage.removeItem(LIVE_KEY); } catch {}
 }
