@@ -3,8 +3,9 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserPlus, BookMarked, Heart, Flame, BookOpen, Users, PlayCircle, MapPin, ArrowRight, Youtube, Loader2 } from "lucide-react";
+import { UserPlus, BookMarked, Heart, BookOpen, Users, PlayCircle, MapPin, ArrowRight, Youtube, Loader2, X, Radio } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
+import { FaHandsPraying } from "react-icons/fa6";
 
 interface LatestSermon {
   id: string;
@@ -13,10 +14,18 @@ interface LatestSermon {
   views: string;
 }
 
-import heroBg from "@assets/image_1775740698464.png";
-import kidsImg from "@assets/image_1775740702854.png";
-import studentsImg from "@assets/image_1775740698464.png";
-import adultsImg from "@assets/image_1775740698464.png";
+interface LiveItem {
+  id: string;
+  title: string;
+  type: "live" | "premiere";
+  url: string;
+}
+
+import slide1 from "@assets/image_1781366915595.png";
+import slide2 from "@assets/image_1781366944400.png";
+import slide3 from "@assets/image_1781366977439.png";
+
+const heroSlides = [slide1, slide2, slide3];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -79,6 +88,46 @@ function StatItem({ value, suffix, label }: { value: number; suffix: string; lab
   );
 }
 
+function LiveBanner({ item, onDismiss }: { item: LiveItem; onDismiss: () => void }) {
+  const { t } = useLanguage();
+  const isLive = item.type === "live";
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ y: -60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -60, opacity: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className={`relative z-40 w-full flex items-center justify-center gap-3 px-4 py-3 text-white text-sm font-medium ${
+          isLive ? "bg-red-600" : "bg-accent"
+        }`}
+      >
+        <span className={`flex items-center gap-1.5 ${isLive ? "animate-pulse" : ""}`}>
+          <Radio className="h-4 w-4 shrink-0" />
+          {isLive
+            ? t("🔴 بث مباشر الآن!", "🔴 Live Now!")
+            : t("🎬 بريمييرا جديدة قادمة!", "🎬 New Premiere Coming!")}
+        </span>
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:opacity-80 transition-opacity truncate max-w-xs"
+        >
+          {item.title}
+        </a>
+        <button
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          className="ms-auto shrink-0 p-1 rounded-full hover:bg-white/20 transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 export default function Home() {
   const { t } = useLanguage();
   const heroRef = useRef<HTMLDivElement>(null);
@@ -89,13 +138,32 @@ export default function Home() {
   const [latestSermon, setLatestSermon] = useState<LatestSermon | null>(null);
   const [sermonLoading, setSermonLoading] = useState(true);
 
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [liveItem, setLiveItem] = useState<LiveItem | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % heroSlides.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     fetch("/api/youtube/videos")
       .then(r => r.json())
       .then(data => {
-        const videos: Array<{ id: string; title: string; published: string; views: string; url: string }> = data.videos ?? [];
-        const sermon = videos.find(v => !v.url.includes("shorts"));
+        const videos: Array<{ id: string; title: string; published: string; views: string; url: string; type: string }> = data.videos ?? [];
+        const live = videos.find(v => v.type === "live" || v.type === "premiere");
+        if (live && (live.type === "live" || live.type === "premiere")) {
+          setLiveItem({ id: live.id, title: live.title, type: live.type as "live" | "premiere", url: live.url });
+        }
+        const sermon = videos.find(v => v.type === "video" && !live?.id.includes(v.id));
         if (sermon) setLatestSermon(sermon);
+        else {
+          const fallback = videos.find(v => !v.url.includes("shorts"));
+          if (fallback) setLatestSermon(fallback);
+        }
       })
       .catch(() => {})
       .finally(() => setSermonLoading(false));
@@ -103,13 +171,44 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section — parallax */}
+      {/* YouTube Live / Premiere Banner */}
+      {liveItem && !bannerDismissed && (
+        <LiveBanner item={liveItem} onDismiss={() => setBannerDismissed(true)} />
+      )}
+
+      {/* Hero Section — slideshow parallax */}
       <section ref={heroRef} className="relative h-[92vh] min-h-[640px] flex items-center justify-center overflow-hidden">
-        <motion.div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${heroBg})`, y: heroY }}
-        />
+        {/* Slideshow backgrounds */}
+        <AnimatePresence mode="sync">
+          <motion.div
+            key={currentSlide}
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${heroSlides[currentSlide]})` }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+          />
+        </AnimatePresence>
+
+        {/* Parallax overlay wrapper */}
+        <motion.div className="absolute inset-0 pointer-events-none" style={{ y: heroY }} />
+
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/55 to-slate-900/80 z-10" />
+
+        {/* Slide dots */}
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+          {heroSlides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentSlide(i)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                i === currentSlide ? "bg-white w-6" : "bg-white/40"
+              }`}
+              aria-label={`Slide ${i + 1}`}
+            />
+          ))}
+        </div>
 
         {/* Floating decorative cross */}
         <motion.div
@@ -280,7 +379,7 @@ export default function Home() {
               description={t("صلي، اسمع، كل، اخدم، شارك", "Pray, Listen, Eat, Serve, Share")}
             />
             <FeatureCard
-              icon={<Flame className="h-8 w-8 text-primary" />}
+              icon={<FaHandsPraying className="h-8 w-8 text-primary" />}
               iconBg="bg-primary/10"
               title={t("طلبة صلاة", "Prayer Disciples")}
               description={t("الصلاة المقتدرة في فعلها", "The Power of Effective Prayer")}
@@ -318,21 +417,21 @@ export default function Home() {
           >
             <MinistryCard
               href="/kids"
-              image={kidsImg}
+              image={slide2}
               title={t("الأطفال", "Kids")}
               description={t("مدارس الأحد ومجموعات صغيرة (٤-١٢ سنة)", "Sunday school & small groups (ages 4–12)")}
               color="bg-primary"
             />
             <MinistryCard
               href="/students"
-              image={studentsImg}
+              image={slide3}
               title={t("الشباب", "Students")}
               description={t("طلبة الجامعة والتلمذة والنمو الروحي", "University students & discipleship")}
               color="bg-accent"
             />
             <MinistryCard
               href="/adults"
-              image={adultsImg}
+              image={slide1}
               title={t("البالغين", "Adults")}
               description={t("خدمات الرجال، السيدات، والمتزوجين", "Men's, Women's, and Married Couples")}
               color="bg-secondary"
@@ -496,7 +595,6 @@ export default function Home() {
 
       {/* Location CTA */}
       <section className="py-24 bg-slate-900 text-white relative overflow-hidden">
-        {/* Background decorative elements */}
         <motion.div
           className="absolute top-0 end-0 w-96 h-96 rounded-full bg-primary/20 blur-3xl pointer-events-none"
           animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
@@ -604,38 +702,35 @@ function FeatureCard({ icon, iconBg, title, description, href }: { icon: React.R
   );
 }
 
-function MinistryCard({ image, title, description, href, color }: { image: string; title: string; description: string; href: string; color: string }) {
+function MinistryCard({ href, image, title, description, color }: { href: string; image: string; title: string; description: string; color: string }) {
   return (
-    <motion.div variants={itemFade}>
-      <Link href={href}>
+    <motion.div variants={itemFade} className="h-full">
+      <Link href={href} className="block h-full">
         <motion.div
-          whileHover={{ y: -8 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="group cursor-pointer"
+          whileHover={{ y: -8, boxShadow: "0 24px 50px rgba(0,0,0,0.18)" }}
+          transition={{ type: "spring", stiffness: 280, damping: 22 }}
+          className="rounded-2xl overflow-hidden h-full group cursor-pointer"
         >
-          <Card className="overflow-hidden border-0 shadow-md hover:shadow-2xl transition-shadow duration-400 h-full">
-            <div className="h-56 overflow-hidden relative">
-              <motion.img
-                src={image}
-                alt={title}
-                className="w-full h-full object-cover"
-                whileHover={{ scale: 1.08 }}
-                transition={{ duration: 0.5 }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className={`absolute bottom-4 start-4 px-3 py-1 rounded-full text-white text-xs font-bold ${color}`}>
-                {title}
-              </div>
+          <div className="relative aspect-[4/3] overflow-hidden">
+            <motion.img
+              src={image}
+              alt={title}
+              className="w-full h-full object-cover"
+              whileHover={{ scale: 1.07 }}
+              transition={{ duration: 0.5 }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+            <div className={`absolute bottom-4 start-4 px-3 py-1 rounded-full ${color} text-white text-sm font-bold`}>
+              {title}
             </div>
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{title}</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
-              <div className="flex items-center gap-1 mt-4 text-primary text-sm font-medium group-hover:gap-2 transition-all">
-                <span>{title === "الأطفال" || title === "Kids" ? "اكتشف" : title === "الشباب" || title === "Students" ? "انضم" : "تعرّف"}{" "}</span>
-                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-              </div>
-            </CardContent>
-          </Card>
+          </div>
+          <div className="p-5 bg-white border border-t-0 border-border/60 rounded-b-2xl">
+            <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+            <div className="mt-3 flex items-center gap-1 text-primary font-medium text-sm group-hover:gap-2 transition-all">
+              <span>اكتشف أكثر</span>
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+            </div>
+          </div>
         </motion.div>
       </Link>
     </motion.div>
