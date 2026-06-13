@@ -55,7 +55,7 @@ export function Header() {
           <motion.img
             src={logoImg}
             alt="Faith Church Logo"
-            className="h-10 w-auto object-contain"
+            className="h-13 w-auto object-contain"
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
           />
