@@ -149,24 +149,39 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // Latest sermon — uses cached video list
   useEffect(() => {
     import("@/lib/youtube").then(({ getYouTubeVideos }) =>
       getYouTubeVideos()
         .then(videos => {
-          const live = videos.find(v => v.type === "live" || v.type === "premiere");
-          if (live) {
-            setLiveItem({ id: live.id, title: live.title, type: live.type as "live" | "premiere", url: live.url });
-          }
-          const sermon = videos.find(v => v.type === "video" && live?.id !== v.id);
+          const sermon = videos.find(v => v.type === "video") ?? videos.find(v => !v.url.includes("shorts"));
           if (sermon) setLatestSermon(sermon);
-          else {
-            const fallback = videos.find(v => !v.url.includes("shorts"));
-            if (fallback) setLatestSermon(fallback);
-          }
         })
         .catch(() => {})
         .finally(() => setSermonLoading(false))
     );
+  }, []);
+
+  // Live stream — separate fresh check, polls every 2 min
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const { getLiveStream, invalidateLiveCache } = await import("@/lib/youtube");
+        // Force-clear cache on first mount so we always get a fresh check
+        invalidateLiveCache();
+        const live = await getLiveStream();
+        if (cancelled) return;
+        if (live) {
+          setLiveItem({ id: live.id, title: live.title, type: live.type, url: live.url });
+        } else {
+          setLiveItem(null);
+        }
+      } catch {}
+    };
+    check();
+    const interval = setInterval(check, 2 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   return (
