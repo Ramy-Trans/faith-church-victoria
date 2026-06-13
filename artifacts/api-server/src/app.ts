@@ -4,6 +4,7 @@ import pinoHttp from "pino-http";
 import path from "path";
 import fs from "fs";
 import router from "./routes";
+import { warmCache } from "./routes/youtube";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -43,5 +44,7 @@ if (fs.existsSync(distPath)) {
 } else {
   logger.warn({ distPath }, "Frontend dist not found — skipping static serving");
 }
+
+warmCache();
 
 export default app;
