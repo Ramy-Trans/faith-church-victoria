@@ -5,6 +5,8 @@ const router = Router();
 const CHANNEL_ID = "UCYdsXaXzdLvgnJL9gsBxY5g";
 const UPLOADS_PLAYLIST_ID = "UUYdsXaXzdLvgnJL9gsBxY5g";
 const MAX_VIDEOS = 100;
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const MAX_RETRIES = 3;
 
 interface YoutubeVideo {
   id: string;
@@ -16,6 +18,28 @@ interface YoutubeVideo {
   views: string;
   type: "video" | "live" | "premiere";
   liveBroadcastContent?: string;
+}
+
+let cache: { data: YoutubeVideo[]; at: number } | null = null;
+let fetchInProgress = false;
+
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        await sleep(500 * attempt);
+      }
+    }
+  }
+  throw lastError;
 }
 
 async function fetchAllVideosFromAPI(apiKey: string): Promise<YoutubeVideo[]> {
@@ -123,39 +147,62 @@ function parseRSS(xml: string): YoutubeVideo[] {
   return videos;
 }
 
-let cache: { data: YoutubeVideo[]; at: number } | null = null;
-const CACHE_TTL = 10 * 60 * 1000;
+async function fetchVideos(): Promise<YoutubeVideo[]> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (apiKey) {
+    return withRetry(() => fetchAllVideosFromAPI(apiKey));
+  }
+  const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
+  return withRetry(async () => {
+    const response = await fetch(RSS_URL, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; FaithChurchBot/1.0)" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) throw new Error(`YouTube RSS fetch failed: ${response.status}`);
+    const xml = await response.text();
+    const videos = parseRSS(xml);
+    if (videos.length === 0) throw new Error("RSS returned no videos");
+    return videos;
+  });
+}
+
+export async function warmCache() {
+  if (cache || fetchInProgress) return;
+  fetchInProgress = true;
+  try {
+    const videos = await fetchVideos();
+    cache = { data: videos, at: Date.now() };
+    console.log(`[youtube] Cache warmed with ${videos.length} videos`);
+  } catch (err) {
+    console.warn("[youtube] Startup cache warm failed:", err instanceof Error ? err.message : err);
+  } finally {
+    fetchInProgress = false;
+  }
+}
 
 router.get("/youtube/videos", async (req, res) => {
+  if (cache && Date.now() - cache.at < CACHE_TTL) {
+    return res.json({ videos: cache.data, cached: true, total: cache.data.length });
+  }
+
+  if (fetchInProgress && cache) {
+    return res.json({ videos: cache.data, cached: true, stale: true, total: cache.data.length });
+  }
+
+  fetchInProgress = true;
   try {
-    if (cache && Date.now() - cache.at < CACHE_TTL) {
-      return res.json({ videos: cache.data, cached: true, total: cache.data.length });
-    }
-
-    const apiKey = process.env.YOUTUBE_API_KEY;
-    let videos: YoutubeVideo[];
-
-    if (apiKey) {
-      videos = await fetchAllVideosFromAPI(apiKey);
-    } else {
-      const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
-      const response = await fetch(RSS_URL, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; FaithChurchBot/1.0)" },
-      });
-      if (!response.ok) throw new Error(`YouTube RSS fetch failed: ${response.status}`);
-      const xml = await response.text();
-      videos = parseRSS(xml);
-    }
-
+    const videos = await fetchVideos();
     cache = { data: videos, at: Date.now() };
     return res.json({ videos, cached: false, total: videos.length });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("YouTube fetch error:", message);
+    console.error("[youtube] Fetch error:", message);
     if (cache) {
       return res.json({ videos: cache.data, cached: true, stale: true, total: cache.data.length });
     }
-    return res.status(500).json({ error: message, videos: [] });
+    return res.json({ videos: [], error: message, total: 0 });
+  } finally {
+    fetchInProgress = false;
   }
 });
 
