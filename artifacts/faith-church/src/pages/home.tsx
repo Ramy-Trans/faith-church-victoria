@@ -150,23 +150,23 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/youtube/videos")
-      .then(r => r.json())
-      .then(data => {
-        const videos: Array<{ id: string; title: string; published: string; views: string; url: string; type: string }> = data.videos ?? [];
-        const live = videos.find(v => v.type === "live" || v.type === "premiere");
-        if (live && (live.type === "live" || live.type === "premiere")) {
-          setLiveItem({ id: live.id, title: live.title, type: live.type as "live" | "premiere", url: live.url });
-        }
-        const sermon = videos.find(v => v.type === "video" && !live?.id.includes(v.id));
-        if (sermon) setLatestSermon(sermon);
-        else {
-          const fallback = videos.find(v => !v.url.includes("shorts"));
-          if (fallback) setLatestSermon(fallback);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setSermonLoading(false));
+    import("@/lib/youtube").then(({ getYouTubeVideos }) =>
+      getYouTubeVideos()
+        .then(videos => {
+          const live = videos.find(v => v.type === "live" || v.type === "premiere");
+          if (live) {
+            setLiveItem({ id: live.id, title: live.title, type: live.type as "live" | "premiere", url: live.url });
+          }
+          const sermon = videos.find(v => v.type === "video" && live?.id !== v.id);
+          if (sermon) setLatestSermon(sermon);
+          else {
+            const fallback = videos.find(v => !v.url.includes("shorts"));
+            if (fallback) setLatestSermon(fallback);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setSermonLoading(false))
+    );
   }, []);
 
   return (
