@@ -180,6 +180,75 @@ export async function warmCache() {
   }
 }
 
+// ─── Live stream detection (server-side, no CORS issues) ──────────────────────
+
+interface LiveInfo {
+  id: string;
+  title: string;
+  type: "live" | "premiere";
+  url: string;
+  thumbnail: string;
+}
+
+let liveCache: { data: LiveInfo | null; at: number } | null = null;
+const LIVE_CACHE_TTL = 90 * 1000; // 90 seconds
+
+async function detectLive(): Promise<LiveInfo | null> {
+  const url = `https://www.youtube.com/channel/${CHANNEL_ID}/live`;
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+    redirect: "follow",
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) return null;
+  const html = await res.text();
+
+  const isLive = html.includes('"isLive":true');
+  const isUpcoming = html.includes('"isUpcoming":true');
+  if (!isLive && !isUpcoming) return null;
+
+  // Find videoId closest to the "isLive":true marker
+  const liveIdx = html.indexOf('"isLive":true');
+  const searchZone = liveIdx > 0
+    ? html.slice(Math.max(0, liveIdx - 800), liveIdx + 200)
+    : html;
+  const idMatch = searchZone.match(/"videoId":"([A-Za-z0-9_-]{11})"/);
+  if (!idMatch) return null;
+  const videoId = idMatch[1];
+
+  // Title from <title> tag (most reliable — page has already resolved to the video)
+  let title = "";
+  const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+  if (titleMatch) title = titleMatch[1].replace(/\s*-\s*YouTube\s*$/, "").trim();
+
+  console.log(`[youtube] Live detected: ${videoId} — ${title}`);
+  return {
+    id: videoId,
+    title: title || (isLive ? "بث مباشر" : "عرض أول"),
+    type: isLive ? "live" : "premiere",
+    url: `https://www.youtube.com/watch?v=${videoId}`,
+    thumbnail: `https://i3.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+  };
+}
+
+router.get("/youtube/live", async (req, res) => {
+  if (liveCache && Date.now() - liveCache.at < LIVE_CACHE_TTL) {
+    return res.json({ live: !!liveCache.data, ...(liveCache.data ?? {}) });
+  }
+  try {
+    const info = await detectLive();
+    liveCache = { data: info, at: Date.now() };
+    return res.json({ live: !!info, ...(info ?? {}) });
+  } catch (err) {
+    console.error("[youtube] Live detect error:", err instanceof Error ? err.message : err);
+    if (liveCache) return res.json({ live: !!liveCache.data, ...(liveCache.data ?? {}) });
+    return res.json({ live: false });
+  }
+});
+
 router.get("/youtube/videos", async (req, res) => {
   if (cache && Date.now() - cache.at < CACHE_TTL) {
     return res.json({ videos: cache.data, cached: true, total: cache.data.length });
