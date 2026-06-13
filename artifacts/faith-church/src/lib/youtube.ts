@@ -1,9 +1,9 @@
 const CHANNEL_ID = "UCYdsXaXzdLvgnJL9gsBxY5g";
-const CHANNEL_HANDLE = "@Faithchegypt";
+const CHANNEL_HANDLE = "Faithchegypt";
 const SESSION_KEY = "fc_yt_cache_v2";
 const SESSION_TTL = 15 * 60 * 1000; // 15 min
 const LIVE_KEY = "fc_live_cache_v1";
-const LIVE_TTL = 2 * 60 * 1000; // 2 min — always check freshly for live
+const LIVE_TTL = 2 * 60 * 1000; // 2 min
 
 export interface YTVideo {
   id: string;
@@ -36,8 +36,7 @@ function parseRSSXml(xml: string): YTVideo[] {
     if (!id) continue;
     const title = (
       e.match(/<media:title><!\[CDATA\[([\s\S]*?)\]\]><\/media:title>/) ??
-      e.match(/<title>(.*?)<\/title>/) ??
-      []
+      e.match(/<title>(.*?)<\/title>/) ?? []
     )[1] ?? "";
     const published = (e.match(/<published>(.*?)<\/published>/) ?? [])[1] ?? "";
     const thumbnail =
@@ -45,8 +44,7 @@ function parseRSSXml(xml: string): YTVideo[] {
       `https://i3.ytimg.com/vi/${id}/hqdefault.jpg`;
     const description = (
       e.match(/<media:description><!\[CDATA\[([\s\S]*?)\]\]><\/media:description>/) ??
-      e.match(/<media:description>([\s\S]*?)<\/media:description>/) ??
-      []
+      e.match(/<media:description>([\s\S]*?)<\/media:description>/) ?? []
     )[1] ?? "";
     const views = (e.match(/<media:statistics views="([^"]*)"/) ?? [])[1] ?? "0";
     const linkHref =
@@ -73,38 +71,33 @@ async function fetchRSS(): Promise<YTVideo[]> {
       const xml = await res.text();
       const videos = parseRSSXml(xml);
       if (videos.length > 0) return videos;
-    } catch {
-      continue;
-    }
+    } catch { continue; }
   }
   throw new Error("All RSS proxies failed");
 }
 
-// ─── Session storage helpers ───────────────────────────────────────────────────
+// ─── Cache helpers ─────────────────────────────────────────────────────────────
 
-function readCache<T>(key: string, ttl: number): T | null {
+function readCache<T>(key: string, ttl: number): { found: true; data: T } | { found: false } {
   try {
     const raw = sessionStorage.getItem(key);
-    if (!raw) return null;
+    if (!raw) return { found: false };
     const { data, at } = JSON.parse(raw) as { data: T; at: number };
-    if (Date.now() - at < ttl) return data;
+    if (Date.now() - at < ttl) return { found: true, data };
   } catch {}
-  return null;
+  return { found: false };
 }
 
 function writeCache<T>(key: string, data: T) {
-  try {
-    sessionStorage.setItem(key, JSON.stringify({ data, at: Date.now() }));
-  } catch {}
+  try { sessionStorage.setItem(key, JSON.stringify({ data, at: Date.now() })); } catch {}
 }
 
 // ─── Video list ────────────────────────────────────────────────────────────────
 
 export async function getYouTubeVideos(): Promise<YTVideo[]> {
-  const cached = readCache<YTVideo[]>(SESSION_KEY, SESSION_TTL);
-  if (cached) return cached;
+  const c = readCache<YTVideo[]>(SESSION_KEY, SESSION_TTL);
+  if (c.found) return c.data;
 
-  // Try backend first (same-origin, fast cache hit in production)
   try {
     const res = await fetch("/api/youtube/videos", { signal: AbortSignal.timeout(3000) });
     if (res.ok) {
@@ -114,10 +107,7 @@ export async function getYouTubeVideos(): Promise<YTVideo[]> {
         thumbnail: v.thumbnail, description: v.description,
         url: v.url, views: v.views, type: v.type ?? "video",
       }));
-      if (videos.length > 0) {
-        writeCache(SESSION_KEY, videos);
-        return videos;
-      }
+      if (videos.length > 0) { writeCache(SESSION_KEY, videos); return videos; }
     }
   } catch {}
 
@@ -127,74 +117,132 @@ export async function getYouTubeVideos(): Promise<YTVideo[]> {
 }
 
 // ─── Live stream detection ─────────────────────────────────────────────────────
-// Fetches the channel's /live page via CORS proxies.
-// YouTube redirects this URL to the actual live video page when a stream is live,
-// and the raw HTML contains ytInitialPlayerResponse with isLive / isUpcoming.
+//
+// Strategy: fetch the channel's /live page through CORS proxies.
+// YouTube redirects this to the actual watch page when a stream is live.
+// We then do SIMPLE STRING SEARCH on the raw HTML — no JSON.parse needed.
+// This avoids the "lazy regex stops at first }" bug.
 
 function decodeUnicode(s: string): string {
-  return s.replace(/\\u[\dA-Fa-f]{4}/g, m =>
-    String.fromCharCode(parseInt(m.slice(2), 16))
-  );
+  return s.replace(/\\u[\dA-Fa-f]{4}/g, m => String.fromCharCode(parseInt(m.slice(2), 16)));
+}
+
+function extractTitle(html: string): string {
+  // og:title is the most reliable
+  const og = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/);
+  if (og) return decodeUnicode(og[1]);
+  const og2 = html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:title"/);
+  if (og2) return decodeUnicode(og2[1]);
+  // name=title fallback
+  const nt = html.match(/<meta[^>]+name="title"[^>]+content="([^"]+)"/);
+  if (nt) return decodeUnicode(nt[1]);
+  return "";
 }
 
 async function fetchLivePage(): Promise<LiveStreamInfo | null> {
-  const liveUrl = `https://www.youtube.com/${CHANNEL_HANDLE}/live`;
-  const proxies = [
-    `https://corsproxy.io/?url=${encodeURIComponent(liveUrl)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(liveUrl)}`,
+  // Two YouTube URL formats that both redirect to the current live stream
+  const liveUrls = [
+    `https://www.youtube.com/@${CHANNEL_HANDLE}/live`,
+    `https://www.youtube.com/channel/${CHANNEL_ID}/live`,
+  ];
+  const makeProxies = [
+    (u: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    (u: string) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
   ];
 
-  for (const proxy of proxies) {
-    try {
-      const res = await fetch(proxy, { signal: AbortSignal.timeout(10000) });
-      if (!res.ok) continue;
-      const html = await res.text();
+  for (const liveUrl of liveUrls) {
+    for (const makeProxy of makeProxies) {
+      try {
+        const res = await fetch(makeProxy(liveUrl), { signal: AbortSignal.timeout(10000) });
+        if (!res.ok) continue;
+        const html = await res.text();
 
-      // Extract ytInitialPlayerResponse from inline script
-      const playerMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\})\s*;/s);
-      if (!playerMatch) continue;
+        // Simple string checks — no JSON.parse, avoids regex-nesting bugs
+        const isLive =
+          html.includes('"isLive":true') ||
+          html.includes('"isLiveNow":true') ||
+          html.includes('"isLiveContent":true');
+        const isUpcoming =
+          html.includes('"isUpcoming":true') &&
+          html.includes('"scheduledStartTime"');
 
-      let playerData: any;
-      try { playerData = JSON.parse(playerMatch[1]); } catch { continue; }
+        if (!isLive && !isUpcoming) {
+          // This URL is not live — no need to try more proxies for it
+          break;
+        }
 
-      const vd = playerData?.videoDetails;
-      if (!vd?.videoId) continue;
+        // Extract the first video ID in the page
+        const idMatch = html.match(/"videoId":"([A-Za-z0-9_-]{11})"/);
+        if (!idMatch) continue;
+        const videoId = idMatch[1];
 
-      const isLive = vd.isLive === true || vd.isLiveContent === true;
-      const isUpcoming = vd.isUpcoming === true;
+        const title = extractTitle(html) || (isLive ? "بث مباشر" : "عرض أول");
 
-      if (!isLive && !isUpcoming) {
-        // Channel live URL loaded but no active/upcoming stream
-        return null;
-      }
-
-      const title = decodeUnicode(vd.title ?? "");
-      return {
-        id: vd.videoId,
-        title,
-        type: isLive ? "live" : "premiere",
-        url: `https://www.youtube.com/watch?v=${vd.videoId}`,
-        thumbnail:
-          `https://i3.ytimg.com/vi/${vd.videoId}/maxresdefault.jpg`,
-      };
-    } catch {
-      continue;
+        return {
+          id: videoId,
+          title,
+          type: isLive ? "live" : "premiere",
+          url: `https://www.youtube.com/watch?v=${videoId}`,
+          thumbnail: `https://i3.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+        };
+      } catch { continue; }
     }
   }
   return null;
 }
 
-export async function getLiveStream(): Promise<LiveStreamInfo | null> {
-  // Short-lived cache — refresh every 2 min so live banners appear quickly
-  const cached = readCache<LiveStreamInfo | null>(LIVE_KEY, LIVE_TTL);
-  if (cached !== null) return cached; // note: null is a valid cached value (no stream)
+// Secondary: check Invidious API (clean JSON, no HTML scraping)
+async function checkLiveViaInvidious(): Promise<LiveStreamInfo | null> {
+  const instances = [
+    `https://inv.tux.pizza`,
+    `https://invidious.privacydev.net`,
+  ];
+  for (const base of instances) {
+    try {
+      const res = await fetch(
+        `${base}/api/v1/channels/${CHANNEL_ID}/videos?sort_by=newest&type=all`,
+        { signal: AbortSignal.timeout(7000), headers: { Accept: "application/json" } }
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      const videos: any[] = data.videos ?? [];
+      const live = videos.find(v => v.liveNow === true || v.isUpcoming === true);
+      if (!live) return null;
+      return {
+        id: live.videoId,
+        title: live.title ?? (live.liveNow ? "بث مباشر" : "عرض أول"),
+        type: live.liveNow ? "live" : "premiere",
+        url: `https://www.youtube.com/watch?v=${live.videoId}`,
+        thumbnail: `https://i3.ytimg.com/vi/${live.videoId}/maxresdefault.jpg`,
+      };
+    } catch { continue; }
+  }
+  return null;
+}
 
-  const info = await fetchLivePage().catch(() => null);
-  writeCache(LIVE_KEY, info ?? null);
+export async function getLiveStream(): Promise<LiveStreamInfo | null> {
+  const c = readCache<LiveStreamInfo | null>(LIVE_KEY, LIVE_TTL);
+  if (c.found) return c.data;
+
+  // Run both methods in parallel; first non-null result wins
+  const [pageResult, invResult] = await Promise.allSettled([
+    fetchLivePage(),
+    checkLiveViaInvidious(),
+  ]);
+
+  const info =
+    (pageResult.status === "fulfilled" && pageResult.value) ||
+    (invResult.status === "fulfilled" && invResult.value) ||
+    null;
+
+  // Only cache if at least one method returned a definitive answer
+  const hadSuccess =
+    pageResult.status === "fulfilled" || invResult.status === "fulfilled";
+  if (hadSuccess) writeCache(LIVE_KEY, info);
+
   return info;
 }
 
-/** Call this to force-clear the live cache and re-check immediately */
 export function invalidateLiveCache() {
   try { sessionStorage.removeItem(LIVE_KEY); } catch {}
 }
