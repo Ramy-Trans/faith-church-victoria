@@ -1,16 +1,34 @@
 import { Link, useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Menu, X, Globe, ChevronDown } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "/logo.png";
+
+const primaryLinks = [
+  { href: "/", labelAr: "الرئيسية", labelEn: "Home" },
+  { href: "/about", labelAr: "عن الكنيسة", labelEn: "About" },
+  { href: "/sermons", labelAr: "العظات", labelEn: "Sermons" },
+  { href: "/events", labelAr: "الفعاليات", labelEn: "Events" },
+];
+
+const moreLinks = [
+  { href: "/first-visit", labelAr: "زيارتك الأولى", labelEn: "First Visit" },
+  { href: "/next-steps", labelAr: "الخطوات القادمة", labelEn: "Next Steps" },
+  { href: "/kids", labelAr: "الأطفال", labelEn: "Kids" },
+  { href: "/students", labelAr: "الشباب", labelEn: "Students" },
+  { href: "/adults", labelAr: "البالغين", labelEn: "Adults" },
+  { href: "/resources", labelAr: "الموارد", labelEn: "Resources" },
+];
 
 export function Header() {
   const { t, language, setLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
+  const moreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -20,24 +38,24 @@ export function Header() {
 
   useEffect(() => {
     setIsOpen(false);
+    setMoreOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const toggleLanguage = () => {
     setLanguage(language === "ar" ? "en" : "ar");
   };
 
-  const navLinks = [
-    { href: "/", labelAr: "الرئيسية", labelEn: "Home" },
-    { href: "/about", labelAr: "عن الكنيسة", labelEn: "About" },
-    { href: "/first-visit", labelAr: "زيارتك الأولى", labelEn: "First Visit" },
-    { href: "/next-steps", labelAr: "الخطوات القادمة", labelEn: "Next Steps" },
-    { href: "/sermons", labelAr: "العظات", labelEn: "Sermons" },
-    { href: "/events", labelAr: "الفعاليات", labelEn: "Events" },
-    { href: "/kids", labelAr: "الأطفال", labelEn: "Kids" },
-    { href: "/students", labelAr: "الشباب", labelEn: "Students" },
-    { href: "/adults", labelAr: "البالغين", labelEn: "Adults" },
-    { href: "/resources", labelAr: "الموارد", labelEn: "Resources" },
-  ];
+  const isMoreActive = moreLinks.some(l => l.href === location);
 
   return (
     <motion.header
@@ -50,20 +68,21 @@ export function Header() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <div className="container mx-auto px-4 flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
+      <div className="container mx-auto px-4 flex h-20 items-center justify-between gap-4">
+        {/* Logo — large, prominent */}
+        <Link href="/" className="flex items-center gap-3 group shrink-0">
           <motion.img
             src={logoImg}
             alt="Faith Church Logo"
-            className="h-13 w-auto object-contain"
-            whileHover={{ scale: 1.05 }}
+            className="h-16 w-auto object-contain drop-shadow-sm"
+            whileHover={{ scale: 1.04 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
           />
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-5">
-          {navLinks.map((link, i) => (
+        <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+          {primaryLinks.map((link, i) => (
             <NavLink
               key={link.href}
               href={link.href}
@@ -72,33 +91,84 @@ export function Header() {
               delay={i * 0.04}
             />
           ))}
-          <div className="flex items-center gap-3 ms-2">
-            <Link
-              href="/give"
-              className="text-sm font-bold text-accent hover:text-accent/80 transition-colors animated-underline"
+
+          {/* More dropdown */}
+          <div ref={moreRef} className="relative">
+            <motion.button
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: primaryLinks.length * 0.04, duration: 0.3 }}
+              onClick={() => setMoreOpen(v => !v)}
+              className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                isMoreActive || moreOpen
+                  ? "text-primary bg-primary/10"
+                  : "text-foreground hover:text-primary hover:bg-primary/5"
+              }`}
             >
-              {t("العطاء", "Give")}
-            </Link>
-            <Link
-              href="/contact"
-              className="text-sm font-medium text-foreground hover:text-primary transition-colors animated-underline"
-            >
-              {t("تواصل معنا", "Contact")}
-            </Link>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleLanguage}
-                className="flex items-center gap-2 border-primary/30 text-primary hover:bg-primary hover:text-white transition-all"
-                data-testid="button-language-toggle"
+              {t("اكتشف", "Explore")}
+              <motion.span
+                animate={{ rotate: moreOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
               >
-                <Globe className="h-4 w-4" />
-                <span>{language === "ar" ? "EN" : "عربي"}</span>
-              </Button>
-            </motion.div>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </motion.span>
+            </motion.button>
+
+            <AnimatePresence>
+              {moreOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="absolute top-full mt-1 start-0 min-w-44 bg-white rounded-xl shadow-xl border border-border/60 overflow-hidden z-50"
+                >
+                  {moreLinks.map(link => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`block px-4 py-2.5 text-sm font-medium transition-colors ${
+                        location === link.href
+                          ? "text-primary bg-primary/10"
+                          : "text-foreground hover:text-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      {t(link.labelAr, link.labelEn)}
+                    </Link>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </nav>
+
+        {/* Desktop Actions */}
+        <div className="hidden lg:flex items-center gap-2 shrink-0">
+          <Link
+            href="/give"
+            className="text-sm font-bold text-accent hover:text-accent/80 transition-colors px-3 py-2 rounded-md hover:bg-accent/10"
+          >
+            {t("العطاء", "Give")}
+          </Link>
+          <Link
+            href="/contact"
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-primary/5"
+          >
+            {t("تواصل معنا", "Contact")}
+          </Link>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 border-primary/30 text-primary hover:bg-primary hover:text-white transition-all"
+              data-testid="button-language-toggle"
+            >
+              <Globe className="h-4 w-4" />
+              <span>{language === "ar" ? "EN" : "عربي"}</span>
+            </Button>
+          </motion.div>
+        </div>
 
         {/* Mobile Toggle */}
         <div className="flex items-center gap-2 lg:hidden">
@@ -142,7 +212,7 @@ export function Header() {
             className="lg:hidden border-t bg-white overflow-hidden"
           >
             <div className="container mx-auto px-4 py-4 flex flex-col gap-1">
-              {navLinks.map((link, i) => (
+              {[...primaryLinks, ...moreLinks].map((link, i) => (
                 <motion.div
                   key={link.href}
                   initial={{ x: language === "ar" ? 20 : -20, opacity: 0 }}
@@ -164,7 +234,7 @@ export function Header() {
               <motion.div
                 initial={{ x: language === "ar" ? 20 : -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: navLinks.length * 0.04 }}
+                transition={{ delay: ([...primaryLinks, ...moreLinks].length) * 0.04 }}
                 className="flex gap-3 pt-2 mt-2 border-t"
               >
                 <Link
@@ -197,15 +267,15 @@ function NavLink({ href, label, isActive, delay }: { href: string; label: string
     >
       <Link
         href={href}
-        className={`relative text-sm font-medium transition-colors animated-underline ${
-          isActive ? "text-primary" : "text-foreground hover:text-primary"
+        className={`relative px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+          isActive ? "text-primary bg-primary/10" : "text-foreground hover:text-primary hover:bg-primary/5"
         }`}
       >
         {label}
         {isActive && (
           <motion.div
             layoutId="active-nav"
-            className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-primary"
+            className="absolute -bottom-[1px] left-3 right-3 h-0.5 bg-primary rounded-full"
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
           />
         )}
