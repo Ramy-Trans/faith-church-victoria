@@ -21,9 +21,9 @@ interface LiveItem {
   url: string;
 }
 
-import slide1 from "@assets/image_1781366915595.png";
-import slide2 from "@assets/image_1781366944400.png";
-import slide3 from "@assets/image_1781366977439.png";
+import slide1 from "@assets/image_1782225810055.png";
+import slide2 from "@assets/image_1782225891614.png";
+import slide3 from "@assets/image_1782225897909.png";
 
 const heroSlides = [slide1, slide2, slide3];
 
@@ -321,11 +321,11 @@ export default function Home() {
       {/* Stats Strip */}
       <section className="bg-primary py-14">
         <div className="container px-4">
-          <div className="grid grid-cols-4 w-full">
-            <div />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full">
             <StatItem value={100} suffix="+" label={t("مجموعة صغيرة", "Small Groups")} />
             <StatItem value={56} suffix="+" label={t("سنة من الخدمة", "Years of Ministry")} />
-            <div />
+            <StatItem value={2000} suffix="+" label={t("شخص نخدمهم أسبوعياً", "People Served Weekly")} />
+            <StatItem value={2} suffix="M+" label={t("متابع على المنصات", "Social Media Followers")} />
           </div>
         </div>
       </section>
