@@ -20,6 +20,8 @@ const moreLinks = [
   { href: "/students", labelAr: "الشباب", labelEn: "Students" },
   { href: "/adults", labelAr: "البالغين", labelEn: "Adults" },
   { href: "/resources", labelAr: "الموارد", labelEn: "Resources" },
+  { href: "/give", labelAr: "العطاء", labelEn: "Give" },
+  { href: "/contact", labelAr: "تواصل معنا", labelEn: "Contact" },
 ];
 
 export function Header() {
@@ -144,18 +146,6 @@ export function Header() {
 
         {/* Desktop Actions */}
         <div className="hidden lg:flex items-center gap-2 shrink-0">
-          <Link
-            href="/give"
-            className="text-sm font-bold text-accent hover:text-accent/80 transition-colors px-3 py-2 rounded-md hover:bg-accent/10"
-          >
-            {t("العطاء", "Give")}
-          </Link>
-          <Link
-            href="/contact"
-            className="text-sm font-medium text-foreground hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-primary/5"
-          >
-            {t("تواصل معنا", "Contact")}
-          </Link>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               variant="outline"
