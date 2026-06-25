@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
 import { Menu, X, Globe, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "/logo.png";
@@ -24,13 +24,20 @@ const moreLinks = [
   { href: "/contact", labelAr: "تواصل معنا", labelEn: "Contact" },
 ];
 
+const LANG_OPTIONS = [
+  { code: "ar" as const, label: "العربية", flag: "🇪🇬" },
+  { code: "en" as const, label: "English", flag: "🇬🇧" },
+];
+
 export function Header() {
   const { t, language, setLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
   const moreRef = useRef<HTMLDivElement>(null);
+  const langRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -41,6 +48,7 @@ export function Header() {
   useEffect(() => {
     setIsOpen(false);
     setMoreOpen(false);
+    setLangOpen(false);
   }, [location]);
 
   useEffect(() => {
@@ -48,14 +56,13 @@ export function Header() {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
         setMoreOpen(false);
       }
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  const toggleLanguage = () => {
-    setLanguage(language === "ar" ? "en" : "ar");
-  };
 
   const isMoreActive = moreLinks.some(l => l.href === location);
 
@@ -70,13 +77,15 @@ export function Header() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <div className="container mx-auto px-4 flex h-20 items-center justify-between gap-4">
-        {/* Logo — large, prominent */}
+      {/* dir="ltr" forces logo to always stay on the physical LEFT side regardless of page language */}
+      <div className="container mx-auto px-4 flex h-24 items-center justify-between gap-4" dir="ltr">
+
+        {/* Logo — always left, large */}
         <Link href="/" className="flex items-center gap-3 group shrink-0">
           <motion.img
             src={logoImg}
             alt="Faith Church Logo"
-            className="h-16 w-auto object-contain drop-shadow-sm"
+            className="h-20 w-auto object-contain drop-shadow-sm"
             whileHover={{ scale: 1.04 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
           />
@@ -108,10 +117,7 @@ export function Header() {
               }`}
             >
               {t("اكتشف", "Explore")}
-              <motion.span
-                animate={{ rotate: moreOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
+              <motion.span animate={{ rotate: moreOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronDown className="h-3.5 w-3.5" />
               </motion.span>
             </motion.button>
@@ -123,7 +129,7 @@ export function Header() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="absolute top-full mt-1 start-0 min-w-44 bg-white rounded-xl shadow-xl border border-border/60 overflow-hidden z-50"
+                  className="absolute top-full mt-1 left-0 min-w-44 bg-white rounded-xl shadow-xl border border-border/60 overflow-hidden z-50"
                 >
                   {moreLinks.map(link => (
                     <Link
@@ -144,20 +150,50 @@ export function Header() {
           </div>
         </nav>
 
-        {/* Desktop Actions */}
+        {/* Desktop Actions — language dropdown */}
         <div className="hidden lg:flex items-center gap-2 shrink-0">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleLanguage}
-              className="flex items-center gap-2 border-primary/30 text-primary hover:bg-primary hover:text-white transition-all"
+          <div ref={langRef} className="relative">
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setLangOpen(v => !v)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium border border-primary/30 rounded-lg text-primary hover:bg-primary/5 transition-all"
               data-testid="button-language-toggle"
             >
               <Globe className="h-4 w-4" />
-              <span>{language === "ar" ? "EN" : "عربي"}</span>
-            </Button>
-          </motion.div>
+              <span>{language === "ar" ? "العربية" : "English"}</span>
+              <motion.span animate={{ rotate: langOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </motion.span>
+            </motion.button>
+
+            <AnimatePresence>
+              {langOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="absolute top-full mt-1 right-0 min-w-36 bg-white rounded-xl shadow-xl border border-border/60 overflow-hidden z-50"
+                >
+                  {LANG_OPTIONS.map(opt => (
+                    <button
+                      key={opt.code}
+                      onClick={() => { setLanguage(opt.code); setLangOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-left transition-colors ${
+                        language === opt.code
+                          ? "text-primary bg-primary/10"
+                          : "text-foreground hover:text-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      <span>{opt.flag}</span>
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Mobile Toggle */}
@@ -165,7 +201,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={toggleLanguage}
+            onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
             data-testid="button-language-toggle-mobile"
           >
             <Globe className="h-5 w-5 text-primary" />
