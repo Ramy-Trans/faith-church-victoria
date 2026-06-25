@@ -21,9 +21,9 @@ interface LiveItem {
   url: string;
 }
 
-import slide1 from "@assets/image_1782225810055.png";
-import slide2 from "@assets/image_1782225891614.png";
-import slide3 from "@assets/image_1782225897909.png";
+import slide1 from "@/assets/hero.jpg";
+import slide2 from "@/assets/worship.jpg";
+import slide3 from "@/assets/community.jpg";
 
 const heroSlides = [slide1, slide2, slide3];
 
@@ -278,7 +278,7 @@ export default function Home() {
 
             <motion.p variants={itemFade} className="text-lg md:text-xl text-slate-200 font-medium">
               {t(
-                "أكون مثله، وأعمل لأجله",
+                "أكون مثله وأعمل لأجله",
                 "A Place to Grow in Faith, Community & Service"
               )}
             </motion.p>
@@ -322,8 +322,8 @@ export default function Home() {
       <section className="bg-primary py-14">
         <div className="container px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full">
-            <StatItem value={100} suffix="+" label={t("مجموعة صغيرة", "Small Groups")} />
             <StatItem value={56} suffix="+" label={t("سنة من الخدمة", "Years of Ministry")} />
+            <StatItem value={100} suffix="+" label={t("مجموعة صغيرة", "Small Groups")} />
             <StatItem value={2000} suffix="+" label={t("شخص نخدمهم أسبوعياً", "People Served Weekly")} />
             <StatItem value={2} suffix="M+" label={t("متابع على المنصات", "Social Media Followers")} />
           </div>
@@ -348,9 +348,12 @@ export default function Home() {
             </motion.div>
             <motion.p variants={itemFade} className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
               {t(
-                "مهما كانت خلفيتك أو قصتك، لك مكان هنا في كنيسة الإيمان.\nرسالتنا هي عبادة الرب وخدمة شعبه بالمنطقة المحيطة والمناطق المختلفة؛ وذلك لربحهم للمسيح وتنميتهم التنمية المتكاملة وتسديد احتياجاتهم الروحية والنفسية والجسدية\nمن خلال المجموعات الصغيرة والإجتماعات العامة.\nشعارنا: نَنْمُو فِي كُلِّ شَيْءٍ (أف 4: 15)",
-                "No matter your background or story, there is a place for you here at Faith Church.\nOur mission is to worship the Lord and serve His people in the surrounding and various areas; winning them to Christ, developing them holistically, and meeting their spiritual, psychological, and physical needs\nthrough small groups and public gatherings.\nOur motto: We Grow in All Things (Eph 4:15)"
+                "عبادة الرب وخدمة شعبه في مصر؛ وذلك لربحهم للمسيح وتنميتهم التنمية المتكاملة وتسديد احتياجاتهم الروحية والنفسية والجسدية.",
+                "Worshipping the Lord and serving His people in Egypt; winning them to Christ, developing them holistically, and meeting their spiritual, psychological, and physical needs."
               )}
+            </motion.p>
+            <motion.p variants={itemFade} className="text-base text-accent font-semibold">
+              {t("شعارنا: أكون مثله وأعمل لأجله", "Motto: Be like Him and work for Him")}
             </motion.p>
             <motion.div variants={itemFade}>
               <Link href="/first-visit">
@@ -390,13 +393,18 @@ export default function Home() {
             <FeatureCard
               icon={<Heart className="h-8 w-8 text-accent" />}
               iconBg="bg-accent/10"
-              title={t("B.L.E.S.S.", "B.L.E.S.S.")}
+              title={
+                <>
+                  <span className="block">{t("شارك الإنجيل", "Share the Gospel")}</span>
+                  <span className="block text-accent text-sm font-semibold mt-0.5">B.L.E.S.S.</span>
+                </>
+              }
               description={t("صلي، اسمع، كل، اخدم، شارك", "Pray, Listen, Eat, Serve, Share")}
             />
             <FeatureCard
               icon={<FaHandsPraying className="h-8 w-8 text-primary" />}
               iconBg="bg-primary/10"
-              title={t("طلبة صلاة", "Prayer Disciples")}
+              title={t("شاركنا طلبة صلاة", "Share a Prayer Request")}
               description={t("الصلاة المقتدرة في فعلها", "The Power of Effective Prayer")}
               href="/contact#prayer-form"
             />
@@ -555,7 +563,6 @@ export default function Home() {
                 className="space-y-4"
               >
                 {[
-                  { titleAr: "اجتماع الصلاة", titleEn: "Prayer Meeting", dateAr: "الجمعة، ٤ مساءً", dateEn: "Friday, 4 PM", color: "bg-primary/10 text-primary", month: "APR", day: "11" },
                   { titleAr: "مؤتمر الأسرة", titleEn: "Family Conference", dateAr: "٢٠-٢٢ يونيو", dateEn: "June 20–22", color: "bg-accent/10 text-accent", month: "JUN", day: "20" },
                   { titleAr: "كامب الشباب", titleEn: "Youth Camp", dateAr: "١٥-١٨ يوليو", dateEn: "July 15–18", color: "bg-secondary/10 text-secondary", month: "JUL", day: "15" },
                 ].map((event, i) => (
@@ -599,11 +606,11 @@ export default function Home() {
             <div className="text-8xl text-primary/10 font-serif leading-none select-none mb-2">"</div>
             <blockquote className="text-2xl md:text-3xl font-semibold text-foreground leading-relaxed">
               {t(
-                "لأَنَّهُ هكَذَا أَحَبَّ اللهُ الْعَالَمَ حَتَّى بَذَلَ ابْنَهُ الْوَحِيدَ",
-                "For God so loved the world that He gave His one and only Son"
+                "«اذْهَبُوا وَتَلْمِذُوا جَمِيعَ الأُمَمِ وَعَمِّدُوهُمْ بِاسْمِ الآبِ وَالاِبْنِ وَالرُّوحِ الْقُدُسِ»",
+                "\"Go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit\""
               )}
             </blockquote>
-            <p className="mt-4 text-accent font-medium">{t("يوحنا ٣: ١٦", "John 3:16")}</p>
+            <p className="mt-4 text-accent font-medium">{t("متى ٢٨: ١٨–٢٠", "Matthew 28:18–20")}</p>
           </motion.div>
         </div>
       </section>
@@ -646,11 +653,10 @@ export default function Home() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto"
+              className="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-xs mx-auto"
             >
               {[
-                { dayAr: "الجمعة", dayEn: "Friday", timeAr: "٤ مساءً", timeEn: "4 PM", labelAr: "اجتماع الشباب", labelEn: "Youth Service" },
-                { dayAr: "الأحد", dayEn: "Sunday", timeAr: "٧ مساءً", timeEn: "7 PM", labelAr: "اجتماع الأحد", labelEn: "Sunday Service" },
+                { dayAr: "الأحد", dayEn: "Sunday", timeAr: "٧:٣٠ مساءً", timeEn: "7:30 PM", labelAr: "اجتماع الأحد", labelEn: "Sunday Service" },
               ].map((s, i) => (
                 <motion.div
                   key={i}
@@ -688,7 +694,7 @@ export default function Home() {
   );
 }
 
-function FeatureCard({ icon, iconBg, title, description, href }: { icon: React.ReactNode; iconBg: string; title: string; description: string; href?: string }) {
+function FeatureCard({ icon, iconBg, title, description, href }: { icon: React.ReactNode; iconBg: string; title: React.ReactNode; description: string; href?: string }) {
   const inner = (
     <motion.div
       whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
