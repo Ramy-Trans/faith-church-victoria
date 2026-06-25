@@ -6,31 +6,31 @@ import { FaFacebook, FaInstagram, FaYoutube, FaSoundcloud, FaTiktok } from "reac
 const socialLinks = [
   {
     icon: <FaFacebook className="h-5 w-5" />,
-    href: "https://www.facebook.com/faithchurchegy",
+    href: "https://www.facebook.com/share/1H5Srg4kD1/?mibextid=wwXIfr",
     label: "Facebook",
     hoverColor: "hover:text-blue-500",
   },
   {
     icon: <FaInstagram className="h-5 w-5" />,
-    href: "https://www.instagram.com/faithchurchegy",
+    href: "https://www.instagram.com/faithchegypt?igsh=NG1weGJicDlkenE%3D&utm_source=qr",
     label: "Instagram",
     hoverColor: "hover:text-pink-500",
   },
   {
     icon: <FaYoutube className="h-5 w-5" />,
-    href: "https://www.youtube.com/@faithchurchegy",
+    href: "https://youtube.com/@faithchegypt?si=DP0XUXApsRxuVQ3C",
     label: "YouTube",
     hoverColor: "hover:text-red-500",
   },
   {
     icon: <FaSoundcloud className="h-5 w-5" />,
-    href: "https://soundcloud.com/faithchurchegy",
+    href: "https://on.soundcloud.com/zzygskMC",
     label: "SoundCloud",
     hoverColor: "hover:text-orange-400",
   },
   {
     icon: <FaTiktok className="h-5 w-5" />,
-    href: "https://www.tiktok.com/@faithchurchegy",
+    href: "https://vt.tiktok.com/ZSC2g7PXX/",
     label: "TikTok",
     hoverColor: "hover:text-white",
   },
@@ -80,10 +80,16 @@ export function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">{t("الخدمات", "Ministries")}</h4>
             <ul className="space-y-2 text-slate-300">
-              <li><Link href="/kids" className="hover:text-white transition-colors">{t("خدمة الأطفال", "Kids Ministry")}</Link></li>
-              <li><Link href="/students" className="hover:text-white transition-colors">{t("الشباب", "Students")}</Link></li>
-              <li><Link href="/adults" className="hover:text-white transition-colors">{t("البالغين", "Adults")}</Link></li>
-              <li><Link href="/resources" className="hover:text-white transition-colors">{t("الموارد", "Resources")}</Link></li>
+              <li><Link href="/kids" className="hover:text-white transition-colors">{t("خدمة الطفل", "Children's Ministry")}</Link></li>
+              <li><Link href="/students" className="hover:text-white transition-colors">{t("خدمة ناشئ", "Youth Ministry")}</Link></li>
+              <li><Link href="/students" className="hover:text-white transition-colors">{t("خدمة الشباب", "Students Ministry")}</Link></li>
+              <li><Link href="/adults" className="hover:text-white transition-colors">{t("خدمة المتزوجين", "Married Couples")}</Link></li>
+              <li><Link href="/adults" className="hover:text-white transition-colors">{t("خدمة السيدات", "Women's Ministry")}</Link></li>
+              <li><Link href="/adults" className="hover:text-white transition-colors">{t("خدمة الرجال", "Men's Ministry")}</Link></li>
+              <li><Link href="/resources" className="hover:text-white transition-colors">{t("خدمة الميديا", "Media Ministry")}</Link></li>
+              <li><Link href="/next-steps" className="hover:text-white transition-colors">{t("خدمة الكرازة", "Evangelism")}</Link></li>
+              <li><Link href="/resources" className="hover:text-white transition-colors">{t("خدمة جبل الصلاة", "Prayer Mountain")}</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors">{t("خدمة احتياجات القديسين", "Saints' Needs")}</Link></li>
             </ul>
           </div>
 
@@ -96,11 +102,11 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-5 w-5 shrink-0" />
-                <span dir="ltr">+20 2 XXXX XXXX</span>
+                <span dir="ltr">+20 122 602 7736</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-5 w-5 shrink-0" />
-                <span>info@faithchurch.eg</span>
+                <span>info@faithch.org</span>
               </li>
             </ul>
           </div>
