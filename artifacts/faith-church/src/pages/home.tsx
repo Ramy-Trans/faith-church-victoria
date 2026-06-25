@@ -356,7 +356,7 @@ export default function Home() {
               {t("شعارنا: أكون مثله وأعمل لأجله", "Motto: Be like Him and work for Him")}
             </motion.p>
             <motion.div variants={itemFade}>
-              <Link href="/first-visit">
+              <Link href="/about">
                 <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white transition-all">
                   {t("تعرّف علينا أكثر", "Learn More About Us")}
                   <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
