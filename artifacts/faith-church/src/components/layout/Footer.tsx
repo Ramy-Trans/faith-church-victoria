@@ -24,7 +24,7 @@ const socialLinks = [
   },
   {
     icon: <FaSoundcloud className="h-5 w-5" />,
-    href: "https://on.soundcloud.com/zzygskMC",
+    href: "https://on.soundcloud.com/dtZdPIDfcQD84hUaqj",
     label: "SoundCloud",
     hoverColor: "hover:text-orange-400",
   },
@@ -98,7 +98,14 @@ export function Footer() {
             <ul className="space-y-3 text-slate-300">
               <li className="flex items-start gap-2">
                 <MapPin className="h-5 w-5 shrink-0 mt-0.5" />
-                <span>{t("ميدان فيكتوريا، شبرا، القاهرة", "Victoria Square, Shubra, Cairo")}</span>
+                <a
+                  href="https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.bing.com%2Fmaps%2Fdefault.aspx%3Fv%3D2%26pc%3DFACEBK%26mid%3D8100%26where1%3D%25D9%25A5%2520%25D8%25B4%2520%25D8%25B9%25D8%25A8%25D8%25AF%2520%25D8%25A7%25D9%2584%25D9%2588%25D9%2587%25D8%25A7%25D8%25A8%2520%25D8%25B2%25D9%258A%25D8%25AF%25D8%25A7%25D9%2586-%2520%25D9%2585%25D9%258A%25D8%25AF%25D8%25A7%25D9%2586%2520%25D9%2581%25D9%258A%25D9%2583%25D8%25AA%25D9%2588%25D8%25B1%25D9%258A%25D8%25A7%25D8%258C%2520%25D8%25A7%25D9%2584%25D8%25AA%25D8%25B1%25D8%25B9%25D8%25A9%2520%25D8%25A7%25D9%2584%25D8%25A8%25D9%2588%25D9%2584%25D8%25A7%25D9%2582%25D9%258A%25D8%25A9%2520-%2520%25D8%25B4%25D8%25A8%25D8%25B1%25D8%25A7%2520%25D9%2585%25D8%25B5%25D8%25B1%252C%2520Cairo%252C%2520Egypt%252C%252011241%26FORM%3DFBKPL1%26mkt%3Den-US%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExOWVEa2JnVnlPaXBvSDlocnNydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR5qK7UX8j2YCHFQ8ziX0YVoKhUqnYtX3t4KhjJd2Q4I4DsAGWaztTYokprxBg_aem_dgOTZNIO10pSMNRp5LUDzA&h=AUCOREF-dD25wPxqC1Uf-29d7RA1tYFwZonROV4MLkYz3SXOqjCrR85Jpbo6XLNr9lNJbwA57_7J_Dkubxbvut6RQ_EDgI0zytloLZBziCqKN7jc2n5f-ir7jFz02KEu7bpg"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-white transition-colors leading-relaxed"
+                >
+                  {t("ش عبد الوهاب زيدان- ميدان فيكتوريا، الترعة البولاقية - شبرا مصر، القاهرة، مصر ١١٢٤١", "Abd El-Wahab Zeidan St, Victoria Sq, Boulakia Canal, Shubra Misr, Cairo, Egypt 11241")}
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-5 w-5 shrink-0" />
