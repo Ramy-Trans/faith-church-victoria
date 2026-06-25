@@ -10,7 +10,7 @@ const primaryLinks = [
   { href: "/", labelAr: "الرئيسية", labelEn: "Home" },
   { href: "/about", labelAr: "عن الكنيسة", labelEn: "About" },
   { href: "/sermons", labelAr: "العظات", labelEn: "Sermons" },
-  { href: "/events", labelAr: "الفعاليات", labelEn: "Events" },
+  { href: "/events", labelAr: "الأحداث", labelEn: "Events" },
 ];
 
 const servicesLinks = [
