@@ -13,12 +13,22 @@ const primaryLinks = [
   { href: "/events", labelAr: "الفعاليات", labelEn: "Events" },
 ];
 
+const servicesLinks = [
+  { href: "/kids", labelAr: "خدمة الطفل", labelEn: "Children's Ministry" },
+  { href: "/students", labelAr: "خدمة ناشئ", labelEn: "Youth Ministry" },
+  { href: "/students", labelAr: "خدمة الشباب", labelEn: "Students Ministry" },
+  { href: "/adults", labelAr: "خدمة المتزوجين", labelEn: "Married Couples" },
+  { href: "/adults", labelAr: "خدمة السيدات", labelEn: "Women's Ministry" },
+  { href: "/adults", labelAr: "خدمة الرجال", labelEn: "Men's Ministry" },
+  { href: "/resources", labelAr: "خدمة الميديا", labelEn: "Media Ministry" },
+  { href: "/next-steps", labelAr: "خدمة الكرازة", labelEn: "Evangelism" },
+  { href: "/resources", labelAr: "خدمة جبل الصلاة", labelEn: "Prayer Mountain" },
+  { href: "/contact", labelAr: "خدمة احتياجات القديسين", labelEn: "Saints' Needs" },
+];
+
 const moreLinks = [
   { href: "/first-visit", labelAr: "زيارتك الأولى", labelEn: "First Visit" },
   { href: "/next-steps", labelAr: "الخطوات القادمة", labelEn: "Next Steps" },
-  { href: "/kids", labelAr: "الأطفال", labelEn: "Kids" },
-  { href: "/students", labelAr: "الشباب", labelEn: "Students" },
-  { href: "/adults", labelAr: "البالغين", labelEn: "Adults" },
   { href: "/resources", labelAr: "الموارد", labelEn: "Resources" },
   { href: "/give", labelAr: "العطاء", labelEn: "Give" },
   { href: "/contact", labelAr: "تواصل معنا", labelEn: "Contact" },
@@ -33,10 +43,12 @@ export function Header() {
   const { t, language, setLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
   const moreRef = useRef<HTMLDivElement>(null);
+  const servicesRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,6 +60,7 @@ export function Header() {
   useEffect(() => {
     setIsOpen(false);
     setMoreOpen(false);
+    setServicesOpen(false);
     setLangOpen(false);
   }, [location]);
 
@@ -55,6 +68,9 @@ export function Header() {
     const handleClick = (e: MouseEvent) => {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
         setMoreOpen(false);
+      }
+      if (servicesRef.current && !servicesRef.current.contains(e.target as Node)) {
+        setServicesOpen(false);
       }
       if (langRef.current && !langRef.current.contains(e.target as Node)) {
         setLangOpen(false);
@@ -65,6 +81,7 @@ export function Header() {
   }, []);
 
   const isMoreActive = moreLinks.some(l => l.href === location);
+  const isServicesActive = servicesLinks.some(l => l.href === location);
 
   return (
     <motion.header
@@ -78,14 +95,14 @@ export function Header() {
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {/* dir="ltr" forces logo to always stay on the physical LEFT side regardless of page language */}
-      <div className="container mx-auto px-4 flex h-24 items-center justify-between gap-4" dir="ltr">
+      <div className="container mx-auto px-4 flex h-32 items-center justify-between gap-4" dir="ltr">
 
         {/* Logo — always left, large */}
         <Link href="/" className="flex items-center gap-3 group shrink-0">
           <motion.img
             src={logoImg}
             alt="Faith Church Logo"
-            className="h-20 w-auto object-contain drop-shadow-sm"
+            className="h-28 w-auto object-contain drop-shadow-sm"
             whileHover={{ scale: 1.04 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
           />
@@ -102,6 +119,52 @@ export function Header() {
               delay={i * 0.04}
             />
           ))}
+
+          {/* Services dropdown */}
+          <div ref={servicesRef} className="relative">
+            <motion.button
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: primaryLinks.length * 0.04, duration: 0.3 }}
+              onClick={() => setServicesOpen(v => !v)}
+              className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                isServicesActive || servicesOpen
+                  ? "text-primary bg-primary/10"
+                  : "text-foreground hover:text-primary hover:bg-primary/5"
+              }`}
+            >
+              {t("الخدمات", "Ministries")}
+              <motion.span animate={{ rotate: servicesOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </motion.span>
+            </motion.button>
+
+            <AnimatePresence>
+              {servicesOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="absolute top-full mt-1 left-0 min-w-52 bg-white rounded-xl shadow-xl border border-border/60 overflow-hidden z-50"
+                >
+                  {servicesLinks.map((link, i) => (
+                    <Link
+                      key={`${link.href}-${i}`}
+                      href={link.href}
+                      className={`block px-4 py-2.5 text-sm font-medium transition-colors ${
+                        location === link.href
+                          ? "text-primary bg-primary/10"
+                          : "text-foreground hover:text-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      {t(link.labelAr, link.labelEn)}
+                    </Link>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* More dropdown */}
           <div ref={moreRef} className="relative">
@@ -238,7 +301,7 @@ export function Header() {
             className="lg:hidden border-t bg-white overflow-hidden"
           >
             <div className="container mx-auto px-4 py-4 flex flex-col gap-1">
-              {[...primaryLinks, ...moreLinks].map((link, i) => (
+              {[...primaryLinks, ...servicesLinks, ...moreLinks].map((link, i) => (
                 <motion.div
                   key={link.href}
                   initial={{ x: language === "ar" ? 20 : -20, opacity: 0 }}
