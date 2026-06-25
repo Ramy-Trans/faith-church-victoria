@@ -6,6 +6,7 @@
 [build.environment]
   NODE_VERSION = "24"
   PNPM_VERSION = "10"
+  GIT_LFS_ENABLED = "false"
 
 # Proxy /api/youtube/videos → Netlify Function (keeps frontend unchanged)
 [[redirects]]
