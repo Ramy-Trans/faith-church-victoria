@@ -21,9 +21,9 @@ interface LiveItem {
   url: string;
 }
 
-import slide1 from "@/assets/hero.jpg";
-import slide2 from "@/assets/worship.jpg";
-import slide3 from "@/assets/community.jpg";
+import slide1 from "@assets/image_1782414115970.png";
+import slide2 from "@assets/image_1782414129716.png";
+import slide3 from "@assets/image_1782414123781.png";
 
 const heroSlides = [slide1, slide2, slide3];
 
@@ -412,184 +412,75 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Ministries Section */}
-      <section className="py-24 bg-background">
+      {/* Latest Video */}
+      <section className="py-24 bg-muted/20">
         <div className="container px-4">
           <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
-            className="text-center max-w-2xl mx-auto mb-14"
-          >
-            <motion.div variants={itemFade}>
-              <span className="inline-block w-12 h-1 rounded-full bg-secondary mb-4" />
-              <h2 className="text-4xl font-bold text-foreground mb-4">{t("الخدمات", "Ministries")}</h2>
-              <p className="text-muted-foreground text-lg">
-                {t("اكتشف المكان المناسب لك للنمو والخدمة", "Find your place to grow and serve")}
-              </p>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            variants={stagger}
+            variants={fadeUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-60px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            className="max-w-3xl mx-auto space-y-6"
           >
-            <MinistryCard
-              href="/kids"
-              image={slide2}
-              title={t("الأطفال", "Kids")}
-              description={t("مدارس الأحد ومجموعات صغيرة (٤-١٢ سنة)", "Sunday school & small groups (ages 4–12)")}
-              color="bg-primary"
-            />
-            <MinistryCard
-              href="/students"
-              image={slide3}
-              title={t("الشباب", "Students")}
-              description={t("طلبة الجامعة والتلمذة والنمو الروحي", "University students & discipleship")}
-              color="bg-accent"
-            />
-            <MinistryCard
-              href="/adults"
-              image={slide1}
-              title={t("البالغين", "Adults")}
-              description={t("خدمات الرجال، السيدات، والمتزوجين", "Men's, Women's, and Married Couples")}
-              color="bg-secondary"
-            />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Latest Sermon & Events */}
-      <section className="py-24 bg-muted/20">
-        <div className="container px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            {/* Latest Sermon */}
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-60px" }}
-              className="lg:col-span-7 space-y-6"
-            >
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-1 rounded-full bg-accent" />
-                <h2 className="text-2xl font-bold text-foreground">{t("العظة الأخيرة", "Latest Sermon")}</h2>
-              </div>
-              <Card className="overflow-hidden border-0 shadow-lg">
-                {sermonLoading ? (
-                  <div className="aspect-video bg-slate-100 flex items-center justify-center">
-                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                  </div>
-                ) : latestSermon ? (
-                  <>
-                    <div className="aspect-video bg-black">
-                      <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${latestSermon.id}?rel=0&modestbranding=1`}
-                        title={latestSermon.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        referrerPolicy="strict-origin-when-cross-origin"
-                        className="w-full h-full"
-                      />
-                    </div>
-                    <CardHeader className="pb-4">
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-50 text-red-600 text-xs font-semibold">
-                              <Youtube className="h-3 w-3" />
-                              YouTube
-                            </span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-semibold">
-                              {t("جديد", "New")}
-                            </span>
-                          </div>
-                          <CardTitle className="text-lg leading-snug line-clamp-2">
-                            {latestSermon.title}
-                          </CardTitle>
-                        </div>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                          {new Date(latestSermon.published).toLocaleDateString(
-                            t("ar-EG", "en-US"),
-                            { year: "numeric", month: "short", day: "numeric" }
-                          )}
-                        </span>
-                      </div>
-                    </CardHeader>
-                  </>
-                ) : (
-                  <div className="aspect-video bg-slate-100 flex items-center justify-center text-muted-foreground">
-                    <PlayCircle className="w-12 h-12 opacity-30" />
-                  </div>
-                )}
-              </Card>
-              <Link href="/sermons">
-                <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white transition-all gap-2">
-                  {t("كل العظات", "All Sermons")}
-                  <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                </Button>
-              </Link>
-            </motion.div>
-
-            {/* Upcoming Events */}
-            <motion.div
-              variants={fadeUp}
-              custom={0.15}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-60px" }}
-              className="lg:col-span-5 space-y-6"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-1 rounded-full bg-secondary" />
-                  <h2 className="text-2xl font-bold text-foreground">{t("فعاليات قادمة", "Upcoming Events")}</h2>
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-1 rounded-full bg-accent" />
+              <h2 className="text-2xl font-bold text-foreground">{t("أحدث فيديو", "Latest Video")}</h2>
+            </div>
+            <Card className="overflow-hidden border-0 shadow-lg">
+              {sermonLoading ? (
+                <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary" />
                 </div>
-                <Link href="/events" className="text-primary font-medium flex items-center gap-1 hover:underline text-sm animated-underline">
-                  {t("عرض الكل", "View All")}
-                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-                </Link>
-              </div>
-
-              <motion.div
-                variants={stagger}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="space-y-4"
-              >
-                {[
-                  { titleAr: "مؤتمر الأسرة", titleEn: "Family Conference", dateAr: "٢٠-٢٢ يونيو", dateEn: "June 20–22", color: "bg-accent/10 text-accent", month: "JUN", day: "20" },
-                  { titleAr: "كامب الشباب", titleEn: "Youth Camp", dateAr: "١٥-١٨ يوليو", dateEn: "July 15–18", color: "bg-secondary/10 text-secondary", month: "JUL", day: "15" },
-                ].map((event, i) => (
-                  <motion.div
-                    key={i}
-                    variants={itemFade}
-                    whileHover={{ x: 4, boxShadow: "0 8px 30px rgba(0,0,0,0.1)" }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  >
-                    <Card className="border border-border/60 hover:border-primary/30 transition-colors">
-                      <CardContent className="p-4 flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-xl ${event.color} flex flex-col items-center justify-center shrink-0`}>
-                          <span className="text-xs font-bold uppercase tracking-wider leading-none">{event.month}</span>
-                          <span className="text-xl font-bold leading-none mt-0.5">{event.day}</span>
+              ) : latestSermon ? (
+                <>
+                  <div className="aspect-video bg-black">
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${latestSermon.id}?rel=0&modestbranding=1`}
+                      title={latestSermon.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      className="w-full h-full"
+                    />
+                  </div>
+                  <CardHeader className="pb-4">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-50 text-red-600 text-xs font-semibold">
+                            <Youtube className="h-3 w-3" />
+                            YouTube
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-semibold">
+                            {t("جديد", "New")}
+                          </span>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground">{t(event.titleAr, event.titleEn)}</h3>
-                          <p className="text-sm text-muted-foreground">{t(event.dateAr, event.dateEn)}</p>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-muted-foreground ms-auto rtl:rotate-180 shrink-0" />
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </motion.div>
-          </div>
+                        <CardTitle className="text-lg leading-snug line-clamp-2">
+                          {latestSermon.title}
+                        </CardTitle>
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                        {new Date(latestSermon.published).toLocaleDateString(
+                          t("ar-EG", "en-US"),
+                          { year: "numeric", month: "short", day: "numeric" }
+                        )}
+                      </span>
+                    </div>
+                  </CardHeader>
+                </>
+              ) : (
+                <div className="aspect-video bg-slate-100 flex items-center justify-center text-muted-foreground">
+                  <PlayCircle className="w-12 h-12 opacity-30" />
+                </div>
+              )}
+            </Card>
+            <Link href="/sermons">
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white transition-all gap-2">
+                {t("كل العظات", "All Sermons")}
+                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+              </Button>
+            </Link>
+          </motion.div>
         </div>
       </section>
 
