@@ -24965,7 +24965,7 @@ var require_atomic_sleep = __commonJS({
   "../../node_modules/.pnpm/atomic-sleep@1.0.0/node_modules/atomic-sleep/index.js"(exports, module) {
     "use strict";
     if (typeof SharedArrayBuffer !== "undefined" && typeof Atomics !== "undefined") {
-      let sleep = function(ms) {
+      let sleep2 = function(ms) {
         const valid = ms > 0 && ms < Infinity;
         if (valid === false) {
           if (typeof ms !== "number" && typeof ms !== "bigint") {
@@ -24976,9 +24976,9 @@ var require_atomic_sleep = __commonJS({
         Atomics.wait(nil, 0, 0, Number(ms));
       };
       const nil = new Int32Array(new SharedArrayBuffer(4));
-      module.exports = sleep;
+      module.exports = sleep2;
     } else {
-      let sleep = function(ms) {
+      let sleep2 = function(ms) {
         const valid = ms > 0 && ms < Infinity;
         if (valid === false) {
           if (typeof ms !== "number" && typeof ms !== "bigint") {
@@ -24990,7 +24990,7 @@ var require_atomic_sleep = __commonJS({
         while (target > Date.now()) {
         }
       };
-      module.exports = sleep;
+      module.exports = sleep2;
     }
   }
 });
@@ -25003,7 +25003,7 @@ var require_sonic_boom = __commonJS({
     var EventEmitter = __require("events");
     var inherits = __require("util").inherits;
     var path2 = __require("path");
-    var sleep = require_atomic_sleep();
+    var sleep2 = require_atomic_sleep();
     var assert = __require("assert");
     var BUSY_WRITE_TIMEOUT = 100;
     var kEmptyBuffer = Buffer.allocUnsafe(0);
@@ -25149,7 +25149,7 @@ var require_sonic_boom = __commonJS({
           if ((err.code === "EAGAIN" || err.code === "EBUSY") && this.retryEAGAIN(err, this._writingBuf.length, this._len - this._writingBuf.length)) {
             if (this.sync) {
               try {
-                sleep(BUSY_WRITE_TIMEOUT);
+                sleep2(BUSY_WRITE_TIMEOUT);
                 this.release(void 0, 0);
               } catch (err2) {
                 this.release(err2);
@@ -25462,7 +25462,7 @@ var require_sonic_boom = __commonJS({
           if (shouldRetry && !this.retryEAGAIN(err, buf.length, this._len - buf.length)) {
             throw err;
           }
-          sleep(BUSY_WRITE_TIMEOUT);
+          sleep2(BUSY_WRITE_TIMEOUT);
         }
       }
       try {
@@ -25499,7 +25499,7 @@ var require_sonic_boom = __commonJS({
           if (shouldRetry && !this.retryEAGAIN(err, buf.length, this._len - buf.length)) {
             throw err;
           }
-          sleep(BUSY_WRITE_TIMEOUT);
+          sleep2(BUSY_WRITE_TIMEOUT);
         }
       }
     }
@@ -26240,7 +26240,7 @@ var require_transport = __commonJS({
     var { createRequire } = __require("module");
     var getCallers = require_caller();
     var { join, isAbsolute, sep } = __require("node:path");
-    var sleep = require_atomic_sleep();
+    var sleep2 = require_atomic_sleep();
     var onExit = require_on_exit_leak_free();
     var ThreadStream = require_thread_stream();
     function setupOnExit(stream) {
@@ -26274,7 +26274,7 @@ var require_transport = __commonJS({
           return;
         }
         stream.flushSync();
-        sleep(100);
+        sleep2(100);
         stream.end();
       }
       return stream;
@@ -32295,6 +32295,27 @@ var router2 = (0, import_express2.Router)();
 var CHANNEL_ID = "UCYdsXaXzdLvgnJL9gsBxY5g";
 var UPLOADS_PLAYLIST_ID = "UUYdsXaXzdLvgnJL9gsBxY5g";
 var MAX_VIDEOS = 100;
+var CACHE_TTL = 30 * 60 * 1e3;
+var MAX_RETRIES = 3;
+var cache = null;
+var fetchInProgress = false;
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+async function withRetry(fn, retries = MAX_RETRIES) {
+  let lastError;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        await sleep(500 * attempt);
+      }
+    }
+  }
+  throw lastError;
+}
 async function fetchAllVideosFromAPI(apiKey) {
   const videoIds = [];
   let pageToken;
@@ -32384,35 +32405,106 @@ function parseRSS(xml) {
   }
   return videos;
 }
-var cache = null;
-var CACHE_TTL = 10 * 60 * 1e3;
-router2.get("/youtube/videos", async (req, res) => {
+async function fetchVideos() {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (apiKey) {
+    return withRetry(() => fetchAllVideosFromAPI(apiKey));
+  }
+  const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
+  return withRetry(async () => {
+    const response = await fetch(RSS_URL, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; FaithChurchBot/1.0)" },
+      signal: AbortSignal.timeout(1e4)
+    });
+    if (!response.ok) throw new Error(`YouTube RSS fetch failed: ${response.status}`);
+    const xml = await response.text();
+    const videos = parseRSS(xml);
+    if (videos.length === 0) throw new Error("RSS returned no videos");
+    return videos;
+  });
+}
+async function warmCache() {
+  if (cache || fetchInProgress) return;
+  fetchInProgress = true;
   try {
-    if (cache && Date.now() - cache.at < CACHE_TTL) {
-      return res.json({ videos: cache.data, cached: true, total: cache.data.length });
-    }
-    const apiKey = process.env.YOUTUBE_API_KEY;
-    let videos;
-    if (apiKey) {
-      videos = await fetchAllVideosFromAPI(apiKey);
-    } else {
-      const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
-      const response = await fetch(RSS_URL, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; FaithChurchBot/1.0)" }
-      });
-      if (!response.ok) throw new Error(`YouTube RSS fetch failed: ${response.status}`);
-      const xml = await response.text();
-      videos = parseRSS(xml);
-    }
+    const videos = await fetchVideos();
+    cache = { data: videos, at: Date.now() };
+    console.log(`[youtube] Cache warmed with ${videos.length} videos`);
+  } catch (err) {
+    console.warn("[youtube] Startup cache warm failed:", err instanceof Error ? err.message : err);
+  } finally {
+    fetchInProgress = false;
+  }
+}
+var liveCache = null;
+var LIVE_CACHE_TTL = 90 * 1e3;
+async function detectLive() {
+  const url = `https://www.youtube.com/channel/${CHANNEL_ID}/live`;
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9"
+    },
+    redirect: "follow",
+    signal: AbortSignal.timeout(8e3)
+  });
+  if (!res.ok) return null;
+  const html = await res.text();
+  const isLive = html.includes('"isLive":true');
+  const isUpcoming = html.includes('"isUpcoming":true');
+  if (!isLive && !isUpcoming) return null;
+  const liveIdx = html.indexOf('"isLive":true');
+  const searchZone = liveIdx > 0 ? html.slice(Math.max(0, liveIdx - 800), liveIdx + 200) : html;
+  const idMatch = searchZone.match(/"videoId":"([A-Za-z0-9_-]{11})"/);
+  if (!idMatch) return null;
+  const videoId = idMatch[1];
+  let title = "";
+  const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+  if (titleMatch) title = titleMatch[1].replace(/\s*-\s*YouTube\s*$/, "").trim();
+  console.log(`[youtube] Live detected: ${videoId} \u2014 ${title}`);
+  return {
+    id: videoId,
+    title: title || (isLive ? "\u0628\u062B \u0645\u0628\u0627\u0634\u0631" : "\u0639\u0631\u0636 \u0623\u0648\u0644"),
+    type: isLive ? "live" : "premiere",
+    url: `https://www.youtube.com/watch?v=${videoId}`,
+    thumbnail: `https://i3.ytimg.com/vi/${videoId}/maxresdefault.jpg`
+  };
+}
+router2.get("/youtube/live", async (req, res) => {
+  if (liveCache && Date.now() - liveCache.at < LIVE_CACHE_TTL) {
+    return res.json({ live: !!liveCache.data, ...liveCache.data ?? {} });
+  }
+  try {
+    const info = await detectLive();
+    liveCache = { data: info, at: Date.now() };
+    return res.json({ live: !!info, ...info ?? {} });
+  } catch (err) {
+    console.error("[youtube] Live detect error:", err instanceof Error ? err.message : err);
+    if (liveCache) return res.json({ live: !!liveCache.data, ...liveCache.data ?? {} });
+    return res.json({ live: false });
+  }
+});
+router2.get("/youtube/videos", async (req, res) => {
+  if (cache && Date.now() - cache.at < CACHE_TTL) {
+    return res.json({ videos: cache.data, cached: true, total: cache.data.length });
+  }
+  if (fetchInProgress && cache) {
+    return res.json({ videos: cache.data, cached: true, stale: true, total: cache.data.length });
+  }
+  fetchInProgress = true;
+  try {
+    const videos = await fetchVideos();
     cache = { data: videos, at: Date.now() };
     return res.json({ videos, cached: false, total: videos.length });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("YouTube fetch error:", message);
+    console.error("[youtube] Fetch error:", message);
     if (cache) {
       return res.json({ videos: cache.data, cached: true, stale: true, total: cache.data.length });
     }
-    return res.status(500).json({ error: message, videos: [] });
+    return res.json({ videos: [], error: message, total: 0 });
+  } finally {
+    fetchInProgress = false;
   }
 });
 var youtube_default = router2;
@@ -32475,6 +32567,7 @@ if (fs.existsSync(distPath)) {
 } else {
   logger.warn({ distPath }, "Frontend dist not found \u2014 skipping static serving");
 }
+warmCache();
 var app_default = app;
 
 // src/index.ts
