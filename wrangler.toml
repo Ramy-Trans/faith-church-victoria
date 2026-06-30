@@ -1,0 +1,2 @@
+name = "faith-church-victoria"
+pages_build_output_dir = "artifacts/faith-church/dist/public"
