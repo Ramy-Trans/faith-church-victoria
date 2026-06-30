@@ -98,7 +98,7 @@ export async function getYouTubeVideos(): Promise<YTVideo[]> {
   if (c.found) return c.data;
 
   try {
-    const res = await fetch("/api/youtube/videos", { signal: AbortSignal.timeout(3000) });
+    const res = await fetch("/api/youtube/videos", { signal: AbortSignal.timeout(12000) });
     if (res.ok) {
       const data = await res.json();
       const videos: YTVideo[] = (data.videos ?? []).map((v: any) => ({
